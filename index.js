@@ -5,12 +5,12 @@ const identity = new Identity('http://127.0.0.1:8545', secretKey);
 
 
 async function main() {
-    
+    const account = identity.getAccount();
     await identity.initRegistry();
-    // let address = await identity.createDelegate();
-    await identity.setAlias("https://myblog.blogging-host.example/home");
-    await identity.setAlias("http://example.com");
-    console.log(await identity.readDID(Identity.accountFrom));
+    // await identity.setDelegate(account);
+    await identity.setAlias("website1", "https://myblog.blogging-host.example/home");
+    await identity.setAlias("website2", "http://example.com", true);
+    console.log(await identity.readDID(account));
 
 }
 

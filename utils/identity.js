@@ -10,6 +10,10 @@ module.exports = function (HTTP_URL, secretKey) {
     let DidReg;
     const web3 = new Web3(new Web3.providers.HttpProvider(HTTP_URL));
     const accountFrom = web3.eth.accounts.privateKeyToAccount(secretKey);
+    
+    this.getAccount = () => {
+      return accountFrom;
+    }
 
     this.initRegistry = async function() {
         DidReg = new web3.eth.Contract(DidRegistryContract.abi);
@@ -53,20 +57,31 @@ module.exports = function (HTTP_URL, secretKey) {
     return account.address;
   }
 
-  this.setAlias = async function (alias) {
+  this.setAlias = async function (nameAlias, alias, verify=false, type=undefined) {
 
-    const b32 = asciiToHex("did/alsoKnownAs");
-    const s = `${alias}`
-    const bvalue = toBuffer(asciiToHex(s));
-    const setAttribute = DidReg.methods.setAttribute(accountFrom.address, b32, bvalue, 30000000);
+    // create the alias
+    let b32 = asciiToHex("did/alsoKnownAs");
+    let s = `{"${nameAlias}": "${alias}"}`
+    let bvalue = toBuffer(asciiToHex(s));
+    let setAttribute = DidReg.methods.setAttribute(accountFrom.address, b32, bvalue, 30000000);
     let gas = await setAttribute.estimateGas({from: accountFrom.address})
     let receipt = await setAttribute.send({from: accountFrom.address, gas: Math.trunc(gas*(2.5))});
+    
+    if (verify) {
+      b32 = asciiToHex('did/verificationMethod');
+      let dic = { id: `did:ethr:development:${accountFrom.address}#${nameAlias}`, controller: `did:ethr:development:${accountFrom.address}`}
+      s = JSON.stringify(dic);
+      bvalue = toBuffer(asciiToHex(s));
+      setAttribute = DidReg.methods.setAttribute(accountFrom.address, b32, bvalue, 30000000);
+      gas = await setAttribute.estimateGas({from: accountFrom.address})
+      receipt = await setAttribute.send({from: accountFrom.address, gas: Math.trunc(gas*(2.5))});
+    }
 
     return accountFrom.address;
     
   }
 
-  this.readDID = async function () {
+  this.readDID = async function (accountFrom) {
     const providerConfig = { 
       networks: [
         { name: "development", rpcUrl: "http://localhost:8545", registry: DidReg.options.address },
@@ -79,8 +94,13 @@ module.exports = function (HTTP_URL, secretKey) {
     delete Object.assign(didDocument, {['verificationMethod']: didDocument['publicKey'] })['publicKey'];
 
     // didDocument['verificationMethod'] = didDocument['verificationMethod'].slice(1);
-
-    didDocument['alsoKnownAs'] = await readAlias(`${accountFrom.address}`);
+    let additionalVer;
+    let result; 
+    result = await readAlias(`${accountFrom.address}`);
+    console.log(await readAlias(`${accountFrom.address}`));
+    didDocument['alsoKnownAs'] = result[0];
+    additionalVer = result[1];
+    for (let i in additionalVer) didDocument['verificationMethod'].push(additionalVer[i]);
     return didDocument;
   }
 
@@ -89,18 +109,21 @@ module.exports = function (HTTP_URL, secretKey) {
       fromBlock: 0,
       toBlock: 'latest'
     });
-
-    let finalResult = [];
+    console.log(resultEvent.length);
+    let finalResultAlias = [];
+    let finalResultVer = []
     for (let i = 0; i <= resultEvent.length - 1; i++) {
       let name = hexToAscii(resultEvent[i].returnValues.name).split('/')[1];
       let value = hexToAscii(resultEvent[i].returnValues.value);
       if ( address == resultEvent[i].returnValues.identity 
-            && ((Date.now() / 1000) < parseInt(resultEvent[i].returnValues.validTo)) 
-              && name.includes('alsoKnownAs')
-            ) {
-                finalResult.push(value);
+            && ((Date.now() / 1000) < parseInt(resultEvent[i].returnValues.validTo))) 
+            if (name.includes('alsoKnownAs')) {
+                finalResultAlias.push(JSON.parse(value));
+                console.log('tick')
+            } else if (name.includes('verificationMethod')) {
+              finalResultVer.push(JSON.parse(value))
             }
     }
-    return finalResult;
+    return [finalResultAlias, finalResultVer];
   }
 }
