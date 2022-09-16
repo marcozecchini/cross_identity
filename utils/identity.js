@@ -33,7 +33,7 @@ module.exports = function (HTTP_URL, secretKey) {
         return createReceipt.contractAddress;
     }
 
-    this.createDelegate = async function (account){
+  this.setDelegate = async function (account){
       const b32 = asciiToHex("did/pub/Ed25519/sigAuth/hex");
       const s = `${account.address}`
       const bvalue = toBuffer(s);
@@ -41,6 +41,16 @@ module.exports = function (HTTP_URL, secretKey) {
       let gas = await setAttribute.estimateGas({from: accountFrom.address})
       let receipt = await setAttribute.send({from: accountFrom.address, gas: Math.trunc(gas*(2.5))});
       return account.address;
+  }
+
+  this.setService = async function (account, nameService, valueService){
+    const b32 = asciiToHex(`did/svc/${nameService}`);
+    const s = `${valueService}`
+    const bvalue = toBuffer(asciiToHex(s));
+    const setAttribute = DidReg.methods.setAttribute(account.address, b32, bvalue, 30000000);
+    let gas = await setAttribute.estimateGas({from: accountFrom.address})
+    let receipt = await setAttribute.send({from: accountFrom.address, gas: Math.trunc(gas*(2.5))});
+    return account.address;
   }
 
   this.setAlias = async function (alias) {
