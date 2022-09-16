@@ -1,0 +1,6 @@
+node_modules
+constant.js
+package-lock.json
+start_node.sh
+contracts/PatriciaMerkleRelay.sol
+secrets.json

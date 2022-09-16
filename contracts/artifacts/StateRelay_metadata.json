@@ -1,0 +1,1296 @@
+{
+	"compiler": {
+		"version": "0.8.6+commit.11564f7e"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_ethashContractAddr",
+						"type": "address"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "returnCode",
+						"type": "uint256"
+					}
+				],
+				"name": "DisputeBlock",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "client",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "bool",
+						"name": "cancelledState",
+						"type": "bool"
+					}
+				],
+				"name": "DisputeWinner",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "blockchainID",
+						"type": "bytes32"
+					},
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "identifier",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "_startingBlockHash",
+						"type": "bytes32"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "_blockNhash",
+						"type": "bytes32"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "intermediateBlockHash",
+						"type": "bytes32"
+					}
+				],
+				"name": "NewAnswer",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "blockchainID",
+						"type": "bytes32"
+					},
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "identifier",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "_startingBlockHash",
+						"type": "bytes32"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "_blockNhash",
+						"type": "bytes32"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "_blockIntermediateHash",
+						"type": "bytes32"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "_confirmingBlockHash",
+						"type": "bytes32"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes",
+						"name": "_stateContent",
+						"type": "bytes"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "_updateLength",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "timeout",
+						"type": "uint256"
+					}
+				],
+				"name": "NewPendingState",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "blockchainID",
+						"type": "bytes32"
+					},
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "identifier",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "_startingBlockHash",
+						"type": "bytes32"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "_blockNhash",
+						"type": "bytes32"
+					}
+				],
+				"name": "NewRequest",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "blockchainID",
+						"type": "bytes32"
+					},
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "identifier",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "stateRoot",
+						"type": "bytes32"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "blockHash",
+						"type": "bytes32"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes",
+						"name": "stateContent",
+						"type": "bytes"
+					},
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "smartContractID",
+						"type": "address"
+					}
+				],
+				"name": "NewState",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "returnCode",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "errorInfo",
+						"type": "uint256"
+					}
+				],
+				"name": "PoWValidationResult",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "client",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "withdrawnStake",
+						"type": "uint256"
+					}
+				],
+				"name": "WithdrawStake",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "blockchainID",
+						"type": "bytes32"
+					},
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "identifier",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "_startingBlockHash",
+						"type": "bytes32"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "_blockNhash",
+						"type": "bytes32"
+					}
+				],
+				"name": "waitForEnd",
+				"type": "event"
+			},
+			{
+				"inputs": [],
+				"name": "BLOCKCHAIN_ID",
+				"outputs": [
+					{
+						"internalType": "bytes32",
+						"name": "",
+						"type": "bytes32"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "REQUIRED_STAKE_PER_CHALLENGE",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "REQUIRED_STAKE_PER_STATE",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "submitter",
+						"type": "address"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "upperLimitBlockHash",
+						"type": "bytes32"
+					}
+				],
+				"name": "challengerMessage",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "depositStake",
+				"outputs": [],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "blockchainID",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "address",
+						"name": "identifier",
+						"type": "address"
+					}
+				],
+				"name": "getConfirmingHash",
+				"outputs": [
+					{
+						"internalType": "bytes32",
+						"name": "",
+						"type": "bytes32"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "blockchainID",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "address",
+						"name": "identifier",
+						"type": "address"
+					}
+				],
+				"name": "getIdentity",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "address",
+								"name": "identifier",
+								"type": "address"
+							},
+							{
+								"internalType": "bytes32",
+								"name": "blockchainId",
+								"type": "bytes32"
+							},
+							{
+								"internalType": "bool",
+								"name": "verified",
+								"type": "bool"
+							},
+							{
+								"components": [
+									{
+										"components": [
+											{
+												"internalType": "uint24",
+												"name": "blockNumber",
+												"type": "uint24"
+											},
+											{
+												"internalType": "bytes32",
+												"name": "stateRoot",
+												"type": "bytes32"
+											},
+											{
+												"internalType": "bytes32",
+												"name": "hash",
+												"type": "bytes32"
+											}
+										],
+										"internalType": "struct StateRelayCore.Header",
+										"name": "header",
+										"type": "tuple"
+									},
+									{
+										"internalType": "address",
+										"name": "identifier",
+										"type": "address"
+									},
+									{
+										"internalType": "bytes32",
+										"name": "genesisBlockHash",
+										"type": "bytes32"
+									},
+									{
+										"internalType": "address",
+										"name": "smartContractId",
+										"type": "address"
+									},
+									{
+										"internalType": "bytes",
+										"name": "stateContent",
+										"type": "bytes"
+									}
+								],
+								"internalType": "struct StateRelayCore.State",
+								"name": "state",
+								"type": "tuple"
+							},
+							{
+								"components": [
+									{
+										"internalType": "address",
+										"name": "identifier",
+										"type": "address"
+									},
+									{
+										"internalType": "address",
+										"name": "challenger",
+										"type": "address"
+									},
+									{
+										"components": [
+											{
+												"components": [
+													{
+														"internalType": "uint24",
+														"name": "blockNumber",
+														"type": "uint24"
+													},
+													{
+														"internalType": "bytes32",
+														"name": "stateRoot",
+														"type": "bytes32"
+													},
+													{
+														"internalType": "bytes32",
+														"name": "hash",
+														"type": "bytes32"
+													}
+												],
+												"internalType": "struct StateRelayCore.Header",
+												"name": "header",
+												"type": "tuple"
+											},
+											{
+												"internalType": "address",
+												"name": "identifier",
+												"type": "address"
+											},
+											{
+												"internalType": "bytes32",
+												"name": "genesisBlockHash",
+												"type": "bytes32"
+											},
+											{
+												"internalType": "address",
+												"name": "smartContractId",
+												"type": "address"
+											},
+											{
+												"internalType": "bytes",
+												"name": "stateContent",
+												"type": "bytes"
+											}
+										],
+										"internalType": "struct StateRelayCore.State",
+										"name": "pendingState",
+										"type": "tuple"
+									},
+									{
+										"components": [
+											{
+												"internalType": "uint24",
+												"name": "blockNumber",
+												"type": "uint24"
+											},
+											{
+												"internalType": "bytes32",
+												"name": "stateRoot",
+												"type": "bytes32"
+											},
+											{
+												"internalType": "bytes32",
+												"name": "hash",
+												"type": "bytes32"
+											}
+										],
+										"internalType": "struct StateRelayCore.Header",
+										"name": "intermediateBlock",
+										"type": "tuple"
+									},
+									{
+										"components": [
+											{
+												"internalType": "uint24",
+												"name": "blockNumber",
+												"type": "uint24"
+											},
+											{
+												"internalType": "bytes32",
+												"name": "stateRoot",
+												"type": "bytes32"
+											},
+											{
+												"internalType": "bytes32",
+												"name": "hash",
+												"type": "bytes32"
+											}
+										],
+										"internalType": "struct StateRelayCore.Header",
+										"name": "upperLimitBlock",
+										"type": "tuple"
+									},
+									{
+										"components": [
+											{
+												"internalType": "uint24",
+												"name": "blockNumber",
+												"type": "uint24"
+											},
+											{
+												"internalType": "bytes32",
+												"name": "stateRoot",
+												"type": "bytes32"
+											},
+											{
+												"internalType": "bytes32",
+												"name": "hash",
+												"type": "bytes32"
+											}
+										],
+										"internalType": "struct StateRelayCore.Header",
+										"name": "lowerLimitBlock",
+										"type": "tuple"
+									},
+									{
+										"components": [
+											{
+												"internalType": "uint24",
+												"name": "blockNumber",
+												"type": "uint24"
+											},
+											{
+												"internalType": "bytes32",
+												"name": "stateRoot",
+												"type": "bytes32"
+											},
+											{
+												"internalType": "bytes32",
+												"name": "hash",
+												"type": "bytes32"
+											}
+										],
+										"internalType": "struct StateRelayCore.Header",
+										"name": "confirmingBlock",
+										"type": "tuple"
+									},
+									{
+										"internalType": "uint256",
+										"name": "answerBefore",
+										"type": "uint256"
+									},
+									{
+										"internalType": "uint64",
+										"name": "lockedUntil",
+										"type": "uint64"
+									},
+									{
+										"internalType": "uint256",
+										"name": "updateLength",
+										"type": "uint256"
+									},
+									{
+										"internalType": "uint256",
+										"name": "midBlockNumber",
+										"type": "uint256"
+									}
+								],
+								"internalType": "struct StateRelayCore.PendingState",
+								"name": "pendingState",
+								"type": "tuple"
+							}
+						],
+						"internalType": "struct StateRelayCore.Identity",
+						"name": "identity",
+						"type": "tuple"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "blockchainID",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "address",
+						"name": "identifier",
+						"type": "address"
+					}
+				],
+				"name": "getIdentityAddress",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "blockchainID",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "address",
+						"name": "identifier",
+						"type": "address"
+					}
+				],
+				"name": "getLastValidStateHeader",
+				"outputs": [
+					{
+						"internalType": "bytes32",
+						"name": "hash",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "uint256",
+						"name": "blockNumber",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "stateRoot",
+						"type": "bytes32"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getNumberOfStateSubmittedByClient",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "blockchainID",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "address",
+						"name": "identifier",
+						"type": "address"
+					}
+				],
+				"name": "getPendingHash",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "address",
+								"name": "identifier",
+								"type": "address"
+							},
+							{
+								"internalType": "address",
+								"name": "challenger",
+								"type": "address"
+							},
+							{
+								"components": [
+									{
+										"components": [
+											{
+												"internalType": "uint24",
+												"name": "blockNumber",
+												"type": "uint24"
+											},
+											{
+												"internalType": "bytes32",
+												"name": "stateRoot",
+												"type": "bytes32"
+											},
+											{
+												"internalType": "bytes32",
+												"name": "hash",
+												"type": "bytes32"
+											}
+										],
+										"internalType": "struct StateRelayCore.Header",
+										"name": "header",
+										"type": "tuple"
+									},
+									{
+										"internalType": "address",
+										"name": "identifier",
+										"type": "address"
+									},
+									{
+										"internalType": "bytes32",
+										"name": "genesisBlockHash",
+										"type": "bytes32"
+									},
+									{
+										"internalType": "address",
+										"name": "smartContractId",
+										"type": "address"
+									},
+									{
+										"internalType": "bytes",
+										"name": "stateContent",
+										"type": "bytes"
+									}
+								],
+								"internalType": "struct StateRelayCore.State",
+								"name": "pendingState",
+								"type": "tuple"
+							},
+							{
+								"components": [
+									{
+										"internalType": "uint24",
+										"name": "blockNumber",
+										"type": "uint24"
+									},
+									{
+										"internalType": "bytes32",
+										"name": "stateRoot",
+										"type": "bytes32"
+									},
+									{
+										"internalType": "bytes32",
+										"name": "hash",
+										"type": "bytes32"
+									}
+								],
+								"internalType": "struct StateRelayCore.Header",
+								"name": "intermediateBlock",
+								"type": "tuple"
+							},
+							{
+								"components": [
+									{
+										"internalType": "uint24",
+										"name": "blockNumber",
+										"type": "uint24"
+									},
+									{
+										"internalType": "bytes32",
+										"name": "stateRoot",
+										"type": "bytes32"
+									},
+									{
+										"internalType": "bytes32",
+										"name": "hash",
+										"type": "bytes32"
+									}
+								],
+								"internalType": "struct StateRelayCore.Header",
+								"name": "upperLimitBlock",
+								"type": "tuple"
+							},
+							{
+								"components": [
+									{
+										"internalType": "uint24",
+										"name": "blockNumber",
+										"type": "uint24"
+									},
+									{
+										"internalType": "bytes32",
+										"name": "stateRoot",
+										"type": "bytes32"
+									},
+									{
+										"internalType": "bytes32",
+										"name": "hash",
+										"type": "bytes32"
+									}
+								],
+								"internalType": "struct StateRelayCore.Header",
+								"name": "lowerLimitBlock",
+								"type": "tuple"
+							},
+							{
+								"components": [
+									{
+										"internalType": "uint24",
+										"name": "blockNumber",
+										"type": "uint24"
+									},
+									{
+										"internalType": "bytes32",
+										"name": "stateRoot",
+										"type": "bytes32"
+									},
+									{
+										"internalType": "bytes32",
+										"name": "hash",
+										"type": "bytes32"
+									}
+								],
+								"internalType": "struct StateRelayCore.Header",
+								"name": "confirmingBlock",
+								"type": "tuple"
+							},
+							{
+								"internalType": "uint256",
+								"name": "answerBefore",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint64",
+								"name": "lockedUntil",
+								"type": "uint64"
+							},
+							{
+								"internalType": "uint256",
+								"name": "updateLength",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "midBlockNumber",
+								"type": "uint256"
+							}
+						],
+						"internalType": "struct StateRelayCore.PendingState",
+						"name": "",
+						"type": "tuple"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getRequiredChallengerFee",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "pure",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getRequiredStakePerState",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "pure",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getStake",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "identifier",
+						"type": "address"
+					}
+				],
+				"name": "getState",
+				"outputs": [
+					{
+						"internalType": "bytes",
+						"name": "state",
+						"type": "bytes"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "identifier",
+						"type": "address"
+					},
+					{
+						"internalType": "bytes",
+						"name": "_rlpHeader",
+						"type": "bytes"
+					},
+					{
+						"internalType": "uint256",
+						"name": "totalDifficulty",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes",
+						"name": "_state",
+						"type": "bytes"
+					}
+				],
+				"name": "initState",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "blockchainID",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "address",
+						"name": "identifier",
+						"type": "address"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "hash",
+						"type": "bytes32"
+					}
+				],
+				"name": "isConfirmingHeaderStored",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "blockchainID",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "address",
+						"name": "identifier",
+						"type": "address"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "hash",
+						"type": "bytes32"
+					}
+				],
+				"name": "isLastHeaderStored",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes",
+						"name": "rlpHeader",
+						"type": "bytes"
+					},
+					{
+						"internalType": "bytes",
+						"name": "rlpConfirmingHeader",
+						"type": "bytes"
+					},
+					{
+						"internalType": "bytes",
+						"name": "rlpIntermediateHeader",
+						"type": "bytes"
+					},
+					{
+						"internalType": "bytes",
+						"name": "stateContent",
+						"type": "bytes"
+					},
+					{
+						"internalType": "uint256",
+						"name": "lengthUpdate",
+						"type": "uint256"
+					}
+				],
+				"name": "submitState",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes",
+						"name": "_rlpIntermediateBlockHeader",
+						"type": "bytes"
+					}
+				],
+				"name": "sumbitterMessage",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes",
+						"name": "rlpHeader",
+						"type": "bytes"
+					},
+					{
+						"internalType": "bytes",
+						"name": "rlpParent",
+						"type": "bytes"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "dataSetLookup",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "witnessForLookup",
+						"type": "uint256[]"
+					}
+				],
+				"name": "verifyBlock",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes",
+						"name": "rlpEncodedValue",
+						"type": "bytes"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "blockHashN",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "bytes",
+						"name": "pathN",
+						"type": "bytes"
+					},
+					{
+						"internalType": "bytes",
+						"name": "rlpEncodedNodesN",
+						"type": "bytes"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "merkleRootHashN",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "blockHashConfirming",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "bytes",
+						"name": "pathConfirming",
+						"type": "bytes"
+					},
+					{
+						"internalType": "bytes",
+						"name": "rlpEncodedNodesConfirming",
+						"type": "bytes"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "merkleRootHashConfirming",
+						"type": "bytes32"
+					}
+				],
+				"name": "verifyState",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "withdrawStake",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "withdrawTimeout",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"details": "This contract uses the StateRelayCore contract and extends it with an incentive structure.",
+			"kind": "dev",
+			"methods": {
+				"depositStake(uint256)": {
+					"details": "Deposits stake for a client allowing the client to submit block headers."
+				},
+				"verifyBlock(bytes,bytes,uint256[],uint256[])": {
+					"details": "Function that ends the dispute among the submitter and the challenger"
+				},
+				"withdrawStake(uint256)": {
+					"details": "Withdraws the stake of a client. The stake is reduced by the specified amount. Emits an event WithdrawStake      containing the client's address and the amount of withdrawn stake."
+				}
+			},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/StateRelay.sol": "StateRelay"
+		},
+		"evmVersion": "berlin",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/MerklePatriciaProof.sol": {
+			"keccak256": "0x805b8457db230aa352caaf9d758d8b149fe051bc30e531de340f3d2bd0b91df8",
+			"license": "Apache-2.0",
+			"urls": [
+				"bzz-raw://0c7dd3ead72250ad6b81b520a65892511bb29ef083987f1818e657f38290661d",
+				"dweb:/ipfs/QmYnytfVxgcJU2dPKaEtpKHYzBm6gkwYnuYqtEEyRMtte6"
+			]
+		},
+		"contracts/RLPReader.sol": {
+			"keccak256": "0x9ffb35a66049b5230e52bc3088b4b1806627a61de8bbc7042a6e836dd77757a6",
+			"license": "Apache-2.0",
+			"urls": [
+				"bzz-raw://ff123609519f8040c1a159a49e3f84e1bac4a43b2bf8419903ea77c04ae4de12",
+				"dweb:/ipfs/QmPANnRNrTohxsCexjP9JDk2PajSBf4eJ3pca7R2vLYz8K"
+			]
+		},
+		"contracts/StateRelay.sol": {
+			"keccak256": "0xf05ea21fba3b89cb715c955162550eea50fb07588b6b61628ea62302c561d02a",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://a51aa6818b785345ee97896f136d7f7be13fc784b87b366f47244a1727590696",
+				"dweb:/ipfs/QmQgnNmmBJdXt1Kzx8vxDhfBsck7DGEweUJz5fnvWGpF9S"
+			]
+		},
+		"contracts/StateRelayCore.sol": {
+			"keccak256": "0x7f963ce25a9233ddbb0e29e13cb947c0d289301091b7053d1f7807d8dd60fabf",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://87bb85c95c3b5cc7475c3c683c478fb9497c347ecc0fb2340309726dedb0387c",
+				"dweb:/ipfs/QmWa4QMqDQ7VJwMNeV4EEqWq2VAz75qpq3mrdSudci2k9j"
+			]
+		}
+	},
+	"version": 1
+}

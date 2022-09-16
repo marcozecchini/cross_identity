@@ -1,0 +1,46 @@
+{
+  "name": "cross_state",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "resolve": {
+    "extensions": [
+      ".wasm",
+      ".mjs",
+      ".js",
+      ".jsx",
+      ".json"
+    ]
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@openzeppelin/test-helpers": "^0.5.15",
+    "@truffle/hdwallet-provider": "^2.0.8",
+    "chai": "^4.3.6",
+    "ganache-cli": "^6.12.2",
+    "solhint": "^3.3.7",
+    "truffle": "^5.1.67"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.7.0",
+    "did-resolver": "2.1.2",
+    "eth-object": "^1.0.3",
+    "eth-proof": "^2.1.6",
+    "ethereumjs-util": "^7.1.5",
+    "ethr-did": "^2.3.0",
+    "ethr-did-registry": "^1.0.1",
+    "ethr-did-resolver": "^3.0.2",
+    "keccak256": "^1.0.6",
+    "merkle-patricia-tree": "^4.2.4",
+    "merkletreejs": "^0.2.32",
+    "rlp": "^3.0.0",
+    "sol2uml": "^1.1.6",
+    "solidity-bytes-utils": "^0.8.0",
+    "web3": "^1.7.5"
+  }
+}

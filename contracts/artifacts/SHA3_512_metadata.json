@@ -1,0 +1,51 @@
+{
+	"compiler": {
+		"version": "0.8.6+commit.11564f7e"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			}
+		],
+		"devdoc": {
+			"details": "These contracts are used to verify Proof of Work within a smart contract.      The algorithms have been extracted from the implementation of smart pool (https://github.com/smartpool)",
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/Ethash.sol": "SHA3_512"
+		},
+		"evmVersion": "berlin",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/Ethash.sol": {
+			"keccak256": "0x83528d9a400c1c832e687822c958152a7d38c147afb0d15445467040511c65db",
+			"urls": [
+				"bzz-raw://bebf349c725d599956c4cdf7f54a69d582adf5f934187959f5bc9640f9877a63",
+				"dweb:/ipfs/QmcmYiZHmS8Lu6ypt3qHHN27QUgm7t4AgFdmAGGbj28DWg"
+			]
+		}
+	},
+	"version": 1
+}

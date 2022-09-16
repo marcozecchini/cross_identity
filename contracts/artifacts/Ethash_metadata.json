@@ -1,0 +1,181 @@
+{
+	"compiler": {
+		"version": "0.8.6+commit.11564f7e"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "sender",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "error",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "errorInfo",
+						"type": "uint256"
+					}
+				],
+				"name": "SetEpochData",
+				"type": "event"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "epochIndex",
+						"type": "uint256"
+					}
+				],
+				"name": "isEpochDataSet",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "epoch",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "fullSizeIn128Resultion",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "branchDepth",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "merkleNodes",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "uint256",
+						"name": "start",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "numElems",
+						"type": "uint256"
+					}
+				],
+				"name": "setEpochData",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "blockNumber",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "rlpHeaderHashWithoutNonce",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "uint256",
+						"name": "nonce",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "difficulty",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "dataSetLookup",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "witnessForLookup",
+						"type": "uint256[]"
+					}
+				],
+				"name": "verifyPoW",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/Ethash.sol": "Ethash"
+		},
+		"evmVersion": "berlin",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/Ethash.sol": {
+			"keccak256": "0x83528d9a400c1c832e687822c958152a7d38c147afb0d15445467040511c65db",
+			"urls": [
+				"bzz-raw://bebf349c725d599956c4cdf7f54a69d582adf5f934187959f5bc9640f9877a63",
+				"dweb:/ipfs/QmcmYiZHmS8Lu6ypt3qHHN27QUgm7t4AgFdmAGGbj28DWg"
+			]
+		}
+	},
+	"version": 1
+}

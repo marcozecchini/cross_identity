@@ -1,0 +1,111 @@
+{
+	"compiler": {
+		"version": "0.8.6+commit.11564f7e"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "blockNumber",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "rlpHeaderHashWithoutNonce",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "uint256",
+						"name": "nonce",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "difficulty",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "dataSetLookup",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "witnessForLookup",
+						"type": "uint256[]"
+					}
+				],
+				"name": "verifyPoW",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/StateRelayCore.sol": "EthashInterface"
+		},
+		"evmVersion": "berlin",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/MerklePatriciaProof.sol": {
+			"keccak256": "0x805b8457db230aa352caaf9d758d8b149fe051bc30e531de340f3d2bd0b91df8",
+			"license": "Apache-2.0",
+			"urls": [
+				"bzz-raw://0c7dd3ead72250ad6b81b520a65892511bb29ef083987f1818e657f38290661d",
+				"dweb:/ipfs/QmYnytfVxgcJU2dPKaEtpKHYzBm6gkwYnuYqtEEyRMtte6"
+			]
+		},
+		"contracts/RLPReader.sol": {
+			"keccak256": "0x9ffb35a66049b5230e52bc3088b4b1806627a61de8bbc7042a6e836dd77757a6",
+			"license": "Apache-2.0",
+			"urls": [
+				"bzz-raw://ff123609519f8040c1a159a49e3f84e1bac4a43b2bf8419903ea77c04ae4de12",
+				"dweb:/ipfs/QmPANnRNrTohxsCexjP9JDk2PajSBf4eJ3pca7R2vLYz8K"
+			]
+		},
+		"contracts/StateRelayCore.sol": {
+			"keccak256": "0x82a838b1ba4bf2be21bb9cf291199e0af2472bfeb741faf00baa7622e45353f2",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://265e78dfdbf627341981a8e157be22890b00dae82ce9199d35e6b7ffe8d98ea9",
+				"dweb:/ipfs/Qmc8nar4SEQvDzuZfoAXFHW7C75CHEYvWrovCedtSxtLer"
+			]
+		}
+	},
+	"version": 1
+}
