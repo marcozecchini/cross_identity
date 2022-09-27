@@ -33,10 +33,13 @@ contract('StateRelay', async(accounts) => {
     let ethash;
     let mainWeb3;
     let sourceWeb3;
+    let next_gas_price;
 
     before(async () => {
         sourceWeb3 = new Web3(INFURA_TESTNET_ENDPOINT);
         mainWeb3 = new Web3(INFURA_MAINNET_ENDPOINT);
+        const block = await mainWeb3.eth.getBlock('latest');
+        next_gas_price = Math.ceil(block.baseFeePerGas);
 
         // Advance to the next block to correctly read time in the solidity "now" function interpreted by ganache
         await time.advanceBlock();
@@ -45,7 +48,8 @@ contract('StateRelay', async(accounts) => {
     beforeEach(async () => {
         staterelay = await StateRelay.new({
             from: accounts[0],
-            gasPrice: GAS_PRICE_IN_WEI
+            gasPrice: GAS_PRICE_IN_WEI,
+            maxFeePerGas: next_gas_price,
         });
 
         ethash = await createEthash(EPOCHFILE);
@@ -61,7 +65,9 @@ contract('StateRelay', async(accounts) => {
                 staterelay.depositStake(stake, {
                     from: accounts[0],
                     value: stake.add(new BN(1)),
-                    gasPrice: GAS_PRICE_IN_WEI
+                    gasPrice: GAS_PRICE_IN_WEI,
+                    maxFeePerGas: next_gas_price,
+
                 }),
                 "transfer amount not equal to function parameter");
         });
@@ -92,14 +98,15 @@ contract('StateRelay', async(accounts) => {
             const startBalance = await mainWeb3.eth.getBalance(accounts[0]);//, GENESIS_BLOCK);
             const genesisRlpHeader = createRLPHeader(genesisBlock);
 
-            await staterelay.depositStake(stake, {from: accounts[0], value: stake});
+            await staterelay.depositStake(stake, {from: accounts[0], value: stake, maxFeePerGas: next_gas_price});
             const balanceAfterCall = await staterelay.getStake({from: accounts[0]});
 
             expect(balanceAfterCall).to.be.bignumber.equal(balanceBeforeCall.add(stake));
 
             await staterelay.initState(accounts[0], genesisRlpHeader, mainWeb3.utils.toHex(startBalance), ethash.address, {
                 from: accounts[0],
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
             });
 
             const state = mainWeb3.utils.hexToNumberString(await staterelay.getState(accounts[0]));
@@ -114,19 +121,25 @@ contract('StateRelay', async(accounts) => {
             const startBalance = await mainWeb3.eth.getBalance(accounts[0]);//, GENESIS_BLOCK);
             const genesisRlpHeader = createRLPHeader(genesisBlock);
 
-            await staterelay.depositStake(stake, {from: accounts[0], value: stake});
+            await staterelay.depositStake(stake, {from: accounts[0], value: stake,
+                maxFeePerGas: next_gas_price,
+            });
             const balanceAfterCall = await staterelay.getStake({from: accounts[0]});
 
             expect(balanceAfterCall).to.be.bignumber.equal(balanceBeforeCall.add(stake));
 
             await staterelay.initState(accounts[0], genesisRlpHeader, mainWeb3.utils.toHex(startBalance), ethash.address, {
                 from: accounts[0],
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
+
             });
 
             await expectRevert(staterelay.initState(accounts[0], genesisRlpHeader, mainWeb3.utils.toHex(startBalance), ethash.address, {
                 from: accounts[0],
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
+
             }),
                 "identity is already initialized");
 
@@ -140,14 +153,18 @@ contract('StateRelay', async(accounts) => {
             const startBalance = await mainWeb3.eth.getBalance(accounts[0]);//, GENESIS_BLOCK);
             const genesisRlpHeader = createRLPHeader(genesisBlock);
 
-            await staterelay.depositStake(stake, {from: accounts[0], value: stake});
+            await staterelay.depositStake(stake, {from: accounts[0], value: stake, 
+                maxFeePerGas: next_gas_price,
+            });
             const balanceAfterCall = await staterelay.getStake({from: accounts[0]});
 
             expect(balanceAfterCall).to.be.bignumber.equal(balanceBeforeCall.add(stake));
 
             await expectRevert(staterelay.initState(accounts[0], genesisRlpHeader, mainWeb3.utils.toHex(startBalance), ethash.address, {
                 from: accounts[1],
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
+
             }),
                 "not the same identity");
 
@@ -165,14 +182,18 @@ contract('StateRelay', async(accounts) => {
             const startBalance = await mainWeb3.eth.getBalance(accounts[0]);//, GENESIS_BLOCK);
             const genesisRlpHeader = createRLPHeader(genesisBlock);
 
-            await staterelay.depositStake(stake, {from: accounts[0], value: stake});
+            await staterelay.depositStake(stake, {from: accounts[0], value: stake, 
+                maxFeePerGas: next_gas_price,
+            });
             const balanceAfterCall = await staterelay.getStake({from: accounts[0]});
 
             expect(balanceAfterCall).to.be.bignumber.equal(balanceBeforeCall.add(stake));
 
             await staterelay.initState(accounts[0], genesisRlpHeader, mainWeb3.utils.toHex(startBalance), ethash.address, {
                 from: accounts[0],
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
+
             });
 
             const state = mainWeb3.utils.hexToNumberString(await staterelay.getState(accounts[0]));
@@ -185,7 +206,9 @@ contract('StateRelay', async(accounts) => {
             let return_value = await staterelay.submitState(newBlock, confirmingBlock, intermediateBlock,  mainWeb3.utils.toHex(startBalance), 10, {
                 from: accounts[0],
                 gas:3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
+
             });
 
             // console.log((await staterelay.getIdentity(BLOCKCHAIN_ID, accounts[0])));
@@ -200,14 +223,18 @@ contract('StateRelay', async(accounts) => {
             const startBalance = await mainWeb3.eth.getBalance(accounts[0]);//, GENESIS_BLOCK);
             const genesisRlpHeader = createRLPHeader(genesisBlock);
 
-            await staterelay.depositStake(stake, {from: accounts[0], value: stake});
+            await staterelay.depositStake(stake, {from: accounts[0], value: stake,
+                maxFeePerGas: next_gas_price,
+            });
             const balanceAfterCall = await staterelay.getStake({from: accounts[0]});
 
             expect(balanceAfterCall).to.be.bignumber.equal(balanceBeforeCall.add(stake));
 
             await staterelay.initState(accounts[0], genesisRlpHeader, mainWeb3.utils.toHex(startBalance), ethash.address, {
                 from: accounts[0],
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
+
             });
 
             const state = mainWeb3.utils.hexToNumberString(await staterelay.getState(accounts[0]));
@@ -219,13 +246,17 @@ contract('StateRelay', async(accounts) => {
 
             await staterelay.submitState(newBlock, confirmingBlock, intermediateBlock, mainWeb3.utils.toHex(startBalance),  10, {
                 from: accounts[0],
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
+
             });
 
             await expectRevert(staterelay.submitState(newBlock, confirmingBlock, intermediateBlock, mainWeb3.utils.toHex(startBalance), 10, {
                 from: accounts[0],
                 gas:3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
+
             }),
                 "dispute period is not expired");
         });
@@ -239,14 +270,18 @@ contract('StateRelay', async(accounts) => {
             const startBalance = await mainWeb3.eth.getBalance(accounts[0]);//, GENESIS_BLOCK);
             const genesisRlpHeader = createRLPHeader(genesisBlock);
 
-            await staterelay.depositStake(stake, {from: accounts[0], value: stake});
+            await staterelay.depositStake(stake, {from: accounts[0], value: stake, 
+                maxFeePerGas: next_gas_price,
+            });
             const balanceAfterCall = await staterelay.getStake({from: accounts[0]});
 
             expect(balanceAfterCall).to.be.bignumber.equal(balanceBeforeCall.add(stake));
 
             await staterelay.initState(accounts[0], genesisRlpHeader, mainWeb3.utils.toHex(startBalance), ethash.address, {
                 from: accounts[0],
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
+
             });
 
             const state = mainWeb3.utils.hexToNumberString(await staterelay.getState(accounts[0]));
@@ -256,11 +291,15 @@ contract('StateRelay', async(accounts) => {
             const intermediateBlock = createRLPHeader(await mainWeb3.eth.getBlock(GENESIS_BLOCK + 5));
             const confirmingBlock = createRLPHeader(await mainWeb3.eth.getBlock(GENESIS_BLOCK + 10));
 
-            await staterelay.depositStake(stake, {from: accounts[1], value: stake});
+            await staterelay.depositStake(stake, {from: accounts[1], value: stake, 
+                maxFeePerGas: next_gas_price,
+            });
             await expectRevert(staterelay.submitState(newBlock, confirmingBlock, intermediateBlock, mainWeb3.utils.toHex(startBalance), 10, {
                 from: accounts[1],
                 gas:3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
+
             }),
                 "identity not initialized");
         });
@@ -273,14 +312,18 @@ contract('StateRelay', async(accounts) => {
             const startBalance = await mainWeb3.eth.getBalance(accounts[0]);//, GENESIS_BLOCK);
             const genesisRlpHeader = createRLPHeader(genesisBlock);
 
-            await staterelay.depositStake(stake, {from: accounts[0], value: stake});
+            await staterelay.depositStake(stake, {from: accounts[0], value: stake, 
+                maxFeePerGas: next_gas_price,
+            });
             const balanceAfterCall = await staterelay.getStake({from: accounts[0]});
 
             expect(balanceAfterCall).to.be.bignumber.equal(balanceBeforeCall.add(stake));
 
             await staterelay.initState(accounts[0], genesisRlpHeader, mainWeb3.utils.toHex(startBalance), ethash.address,  {
                 from: accounts[0],
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
+
             });
 
             const state = mainWeb3.utils.hexToNumberString(await staterelay.getState(accounts[0]));
@@ -293,7 +336,9 @@ contract('StateRelay', async(accounts) => {
             await expectRevert(staterelay.submitState(newBlock, confirmingBlock, intermediateBlock, mainWeb3.utils.toHex(startBalance), 10, {
                 from: accounts[0],
                 gas:3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
+
             }),
                 "not confirmingBlock");
         });
@@ -313,6 +358,7 @@ contract('StateRelay', async(accounts) => {
 
             await staterelay.initState(accounts[0], genesisRlpHeader, mainWeb3.utils.toHex(startBalance), ethash.address, {
                 from: accounts[0],
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
 
@@ -326,6 +372,7 @@ contract('StateRelay', async(accounts) => {
             await expectRevert(staterelay.submitState(newBlock, confirmingBlock, intermediateBlock, mainWeb3.utils.toHex(startBalance), 10, {
                 from: accounts[0],
                 gas:3000000,
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             }),
                 "not intermediateBlock");
@@ -350,11 +397,16 @@ contract('StateRelay', async(accounts) => {
             const startBalance = await getAccountState(mainWeb3, accounts[0], GENESIS_BLOCK); //await mainWeb3.eth.getBalance(accounts[0], GENESIS_BLOCK);
             const genesisRlpHeader = createRLPHeader(genesisBlock);
 
-            await staterelay.depositStake(stake, {from: accounts[0], value: stake});
-            await staterelay.depositStake(stake, {from: accounts[1], value: stake});
+            await staterelay.depositStake(stake, {from: accounts[0], value: stake,
+                maxFeePerGas: next_gas_price,
+            });
+            await staterelay.depositStake(stake, {from: accounts[1], value: stake, 
+                maxFeePerGas: next_gas_price,
+            });
 
             await staterelay.initState(accounts[0], genesisRlpHeader, startBalance, ethash.address, {
                 from: accounts[0],
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
 
@@ -372,6 +424,7 @@ contract('StateRelay', async(accounts) => {
             await staterelay.submitState(newBlock, confirmingBlock, intermediateBlock,  startBalance, 10, {
                 from: accounts[0],
                 gas:3000000,
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
             
@@ -379,6 +432,7 @@ contract('StateRelay', async(accounts) => {
 
             await staterelay.challengerMessage(accounts[0], intermediateHash, {
                 from: accounts[1],
+                maxFeePerGas: next_gas_price,
                 gas:3000000,
                 gasPrice: GAS_PRICE_IN_WEI
             });
@@ -395,6 +449,7 @@ contract('StateRelay', async(accounts) => {
                 await staterelay.sumbitterMessage(intermediateBlock, { // and then ... submit it
                     from: accounts[0],
                     gas:3000000,
+                    maxFeePerGas: next_gas_price,
                     gasPrice: GAS_PRICE_IN_WEI
                 });
                 
@@ -406,6 +461,7 @@ contract('StateRelay', async(accounts) => {
                     await staterelay.challengerMessage(accounts[0], higherHash, {
                         from: accounts[1],
                         gas:3000000,
+                        maxFeePerGas: next_gas_price,
                         gasPrice: GAS_PRICE_IN_WEI
                     });
                 } else { // otherwise, if they differ, the problem might be before..
@@ -413,6 +469,7 @@ contract('StateRelay', async(accounts) => {
                     await staterelay.challengerMessage(accounts[0], lowerHash, {
                         from: accounts[1],
                         gas:3000000,
+                        maxFeePerGas: next_gas_price,
                         gasPrice: GAS_PRICE_IN_WEI
                     });
                 }
@@ -435,6 +492,7 @@ contract('StateRelay', async(accounts) => {
             let ret = await staterelay.verifyBlock(intermediateBlock, parentBlock, DatasetLookUp, WitnessForLookup, {
                 from: accounts[0],
                 gas:3000000,
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
             
@@ -447,6 +505,7 @@ contract('StateRelay', async(accounts) => {
             ret = await staterelay.verifyState(newBlock, proof, confirmingBlock, proof_c,  {
                 from: accounts[0],
                 gas:3000000,
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
 
@@ -462,12 +521,18 @@ contract('StateRelay', async(accounts) => {
             const startBalance = await getAccountState(mainWeb3, accounts[0], GENESIS_BLOCK); //await mainWeb3.eth.getBalance(accounts[0], GENESIS_BLOCK);
             const genesisRlpHeader = createRLPHeader(genesisBlock);
 
-            await staterelay.depositStake(stake, {from: accounts[0], value: stake});
-            await staterelay.depositStake(stake, {from: accounts[1], value: stake});
+            await staterelay.depositStake(stake, {from: accounts[0], value: stake, 
+                maxFeePerGas: next_gas_price,
+            });
+            await staterelay.depositStake(stake, {from: accounts[1], value: stake,
+                maxFeePerGas: next_gas_price,
+            });
 
             await staterelay.initState(accounts[0], genesisRlpHeader, startBalance, ethash.address, {
                 from: accounts[0],
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
+
             });
 
 
@@ -484,6 +549,7 @@ contract('StateRelay', async(accounts) => {
             await staterelay.submitState(newBlock, confirmingBlock, intermediateBlock,  startBalance, 10, {
                 from: accounts[0],
                 gas:3000000,
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
             
@@ -492,7 +558,9 @@ contract('StateRelay', async(accounts) => {
             await staterelay.challengerMessage(accounts[0], intermediateHash, {
                 from: accounts[1],
                 gas:3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
+
             });
         
             half = (await staterelay.getIdentity(BLOCKCHAIN_ID, accounts[0])).pendingState.midBlockNumber;
@@ -506,6 +574,7 @@ contract('StateRelay', async(accounts) => {
 
                 await staterelay.sumbitterMessage(intermediateBlock, { // and then ... submit it
                     from: accounts[0],
+                    maxFeePerGas: next_gas_price,
                     gas:3000000,
                     gasPrice: GAS_PRICE_IN_WEI
                 });
@@ -518,6 +587,7 @@ contract('StateRelay', async(accounts) => {
                     await staterelay.challengerMessage(accounts[0], higherHash, {
                         from: accounts[1],
                         gas:3000000,
+                        maxFeePerGas: next_gas_price,
                         gasPrice: GAS_PRICE_IN_WEI
                     });
                 } else { // otherwise, if they differ, the problem might be before..
@@ -525,6 +595,7 @@ contract('StateRelay', async(accounts) => {
                     await staterelay.challengerMessage(accounts[0], lowerHash, {
                         from: accounts[1],
                         gas:3000000,
+                        maxFeePerGas: next_gas_price,
                         gasPrice: GAS_PRICE_IN_WEI
                     });
                 }
@@ -533,7 +604,6 @@ contract('StateRelay', async(accounts) => {
                 lower = (await staterelay.getIdentity(BLOCKCHAIN_ID, accounts[0])).pendingState.lowerLimitBlock.blockNumber;
                 
             }  
-
            
                                     
             // rlp encoding of proves
@@ -543,6 +613,7 @@ contract('StateRelay', async(accounts) => {
             let ret = await expectRevert(staterelay.verifyState(newBlock, proof, confirmingBlock, proof_c,  {
                 from: accounts[0],
                 gas:3000000,
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             }), "verify the block before");
             
@@ -555,12 +626,18 @@ contract('StateRelay', async(accounts) => {
             let startBalance = await getAccountState(mainWeb3, accounts[0], GENESIS_BLOCK);
             const genesisRlpHeader = createRLPHeader(genesisBlock);
 
-            await staterelay.depositStake(stake, {from: accounts[0], value: stake});
-            await staterelay.depositStake(stake, {from: accounts[1], value: stake});
+            await staterelay.depositStake(stake, {from: accounts[0], value: stake, 
+                maxFeePerGas: next_gas_price,
+            });
+            await staterelay.depositStake(stake, {from: accounts[1], value: stake,
+                maxFeePerGas: next_gas_price,
+            });
    
             await staterelay.initState(accounts[0], genesisRlpHeader, startBalance, ethash.address,  {
                 from: accounts[0],
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
+
             });
 
             const state = await staterelay.getState(accounts[0]);
@@ -579,6 +656,7 @@ contract('StateRelay', async(accounts) => {
             let ret = await staterelay.submitState(newBlock, confirmingBlock, intermediateBlock, startBalance, i_c, {
                 from: accounts[0],
                 gas:3000000,
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
             expectEvent.inLogs(ret.logs, "NewPendingState");
@@ -595,6 +673,8 @@ contract('StateRelay', async(accounts) => {
                 ret = await staterelay.sumbitterMessage(intermediateBlock, {
                     from: accounts[0],
                     gas:3000000,
+                    maxFeePerGas: next_gas_price,
+
                     gasPrice: GAS_PRICE_IN_WEI
                 });
                 expectEvent.inLogs(ret.logs, "NewAnswer");
@@ -607,14 +687,18 @@ contract('StateRelay', async(accounts) => {
                     ret = await staterelay.challengerMessage(accounts[0], higherHash, {
                         from: accounts[1],
                         gas:3000000,
-                        gasPrice: GAS_PRICE_IN_WEI
+                        gasPrice: GAS_PRICE_IN_WEI,
+                        maxFeePerGas: next_gas_price,
+
                     });
                 } else { // otherwise, if they differ, the problem might be before..
                     let lowerHash = (await staterelay.getIdentity(BLOCKCHAIN_ID, accounts[0])).pendingState.lowerLimitBlock.hash;
                     ret = await staterelay.challengerMessage(accounts[0], lowerHash, {
                         from: accounts[1],
                         gas:3000000,
-                        gasPrice: GAS_PRICE_IN_WEI
+                        gasPrice: GAS_PRICE_IN_WEI,
+                        maxFeePerGas: next_gas_price,
+
                     });
                 }
                 
@@ -631,6 +715,7 @@ contract('StateRelay', async(accounts) => {
             ret = await staterelay.verifyBlock(intermediateBlock, parentBlock, DatasetLookUp, WitnessForLookup, {
                 from: accounts[0],
                 gas:3000000,
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
             
@@ -645,12 +730,17 @@ contract('StateRelay', async(accounts) => {
             let startBalance = await getAccountState(mainWeb3, accounts[0], GENESIS_BLOCK);
             const genesisRlpHeader = createRLPHeader(genesisBlock);
 
-            await staterelay.depositStake(stake, {from: accounts[0], value: stake});
-            await staterelay.depositStake(stake, {from: accounts[1], value: stake});
+            await staterelay.depositStake(stake, {from: accounts[0], value: stake,
+                maxFeePerGas: next_gas_price,
+            });
+            await staterelay.depositStake(stake, {from: accounts[1], value: stake,
+                maxFeePerGas: next_gas_price,
+            });
    
             await staterelay.initState(accounts[0], genesisRlpHeader, startBalance, ethash.address, {
                 from: accounts[0],
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
             });
 
             const state = await staterelay.getState(accounts[0]);
@@ -672,6 +762,7 @@ contract('StateRelay', async(accounts) => {
             let ret = await staterelay.submitState(newBlock, confirmingBlock, intermediateBlock, startBalance, i_c, {
                 from: accounts[0],
                 gas:3000000,
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
 
@@ -686,6 +777,7 @@ contract('StateRelay', async(accounts) => {
 
                 ret = await staterelay.sumbitterMessage(intermediateBlock, {
                     from: accounts[0],
+                    maxFeePerGas: next_gas_price,
                     gas:3000000,
                     gasPrice: GAS_PRICE_IN_WEI
                 });
@@ -722,7 +814,7 @@ contract('StateRelay', async(accounts) => {
 
     const getAccountProof = async (rpc, accountAddr, blockNumber) => {
         let proof = await rpc.eth.getProof(accountAddr, [], blockNumber);
-        // console.log(proof)
+        console.log(proof)
         return createRLPNodeEncodeState(proof.accountProof);
     }
 
@@ -739,7 +831,9 @@ contract('StateRelay', async(accounts) => {
         const submitTime = await time.latest();
         const increasedTime = submitTime.add(LOCK_PERIOD).add(time.duration.seconds(1));
         await time.increaseTo(increasedTime);  // unlock all blocks
-        await staterelay.withdrawStake(stake, {from: accountAddr, gasPrice: GAS_PRICE_IN_WEI});
+        await staterelay.withdrawStake(stake, {from: accountAddr, gasPrice: GAS_PRICE_IN_WEI, 
+            maxFeePerGas: next_gas_price,
+        });
     };
 
     const createEthash = async (EPOCHFILE) => {
@@ -786,6 +880,7 @@ contract('StateRelay', async(accounts) => {
     
             ret = await staterelay.challengerMessage(accounts[0], upperLimitBlockHash, {
                 from: accounts[1],
+                maxFeePerGas: next_gas_price,
                 gas: 3000000,
                 gasPrice: GAS_PRICE_IN_WEI
             });
@@ -801,7 +896,9 @@ contract('StateRelay', async(accounts) => {
             ret = await staterelay.challengerMessage(accounts[0], upperLimitBlockHash, {
                 from: accounts[1],
                 gas: 3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
+
             });
     
             half = (await staterelay.getIdentity(BLOCKCHAIN_ID, accounts[0])).pendingState.midBlockNumber;

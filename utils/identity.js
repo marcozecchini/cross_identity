@@ -6,7 +6,7 @@ const { Resolver } = require('did-resolver');
 const { getResolver } = require('ethr-did-resolver');
 const { toBuffer } = require( "ethereumjs-util");
 
-module.exports = function (HTTP_URL, secretKey) {
+module.exports = function (HTTP_URL, secretKey, abi, bytecode) {
     let DidReg;
     const web3 = new Web3(new Web3.providers.HttpProvider(HTTP_URL));
     const accountFrom = web3.eth.accounts.privateKeyToAccount(secretKey);
@@ -15,27 +15,42 @@ module.exports = function (HTTP_URL, secretKey) {
       return accountFrom;
     }
 
-    this.initRegistry = async function() {
-        DidReg = new web3.eth.Contract(DidRegistryContract.abi);
-        const bytecode = DidRegistryContract.bytecode;
+    this.initRegistry = async function(abi=undefined, bytecode=undefined, DIDRegAddress=undefined) {
+        bytecode = bytecode === undefined? DidRegistryContract.bytecode : bytecode;
 
-        const deployTx = DidReg.deploy({
-            data: bytecode,
-        });
+        if (DIDRegAddress === undefined) {
+          DidReg = abi === undefined? new web3.eth.Contract(DidRegistryContract.abi): new web3.eth.Contract(abi) ;
 
-        const createTransaction = await web3.eth.accounts.signTransaction(
-            {
-              data: deployTx.encodeABI(),
-              gas: await deployTx.estimateGas(),
-            },
-            accountFrom.privateKey
-          );
-        const createReceipt = await web3.eth.sendSignedTransaction(createTransaction.rawTransaction);
-        console.log(`Contract deployed at address: ${createReceipt.contractAddress}`);
+          const deployTx = DidReg.deploy({
+              data: bytecode,
+          });
 
-        DidReg = new web3.eth.Contract(DidRegistryContract.abi, createReceipt.contractAddress);
-        return createReceipt.contractAddress;
+          const createTransaction = await web3.eth.accounts.signTransaction(
+              {
+                data: deployTx.encodeABI(),
+                gas: await deployTx.estimateGas(),
+              },
+              accountFrom.privateKey
+            );
+          const createReceipt = await web3.eth.sendSignedTransaction(createTransaction.rawTransaction);
+          console.log(`Contract deployed at address: ${createReceipt.contractAddress}`);
+
+          DidReg =  abi === undefined? new web3.eth.Contract(DidRegistryContract.abi, createReceipt.contractAddress): new web3.eth.Contract(abi, createReceipt.contractAddress);
+          return createReceipt.contractAddress;
+        }
+
+        DidReg = abi === undefined? new web3.eth.Contract(DidRegistryContract.abi, DIDRegAddress): new web3.eth.Contract(abi, DIDRegAddress) ;
+        return DIDRegAddress;        
+
     }
+
+  this.setContractOwner = async function (contractAddress) {
+    const changeOwner = DidReg.methods.changeOwner(accountFrom.address, contractAddress);
+    let gas = await changeOwner.estimateGas({from: accountFrom.address});
+    let receipt = await changeOwner.send({from: accountFrom.address, gas: Math.trunc(gas*(2.5))});
+    console.log()
+    return receipt.transactionHash;
+  }
 
   this.setDelegate = async function (account){
       const b32 = asciiToHex("did/pub/Ed25519/sigAuth/hex");
@@ -57,27 +72,21 @@ module.exports = function (HTTP_URL, secretKey) {
     return account.address;
   }
 
-  this.setAlias = async function (nameAlias, alias, verify=false, type=undefined) {
+  this.createAlias = function (nameAlias, alias, verificationMethod) {
+    return createAlias(nameAlias, alias, verificationMethod);
+  }
 
+  this.setAlias = async function (nameAlias, alias, verificationMethod=undefined) {
+    let returnedTx = []
     // create the alias
-    let b32 = asciiToHex("did/alsoKnownAs");
-    let s = `{"${nameAlias}": "${alias}"}`
-    let bvalue = toBuffer(asciiToHex(s));
-    let setAttribute = DidReg.methods.setAttribute(accountFrom.address, b32, bvalue, 30000000);
+    let r = createAlias(nameAlias, alias, verificationMethod);
+    
+    let setAttribute = DidReg.methods.setAttribute(accountFrom.address, r[0],r[1], 30000000);
     let gas = await setAttribute.estimateGas({from: accountFrom.address})
     let receipt = await setAttribute.send({from: accountFrom.address, gas: Math.trunc(gas*(2.5))});
-    
-    if (verify) {
-      b32 = asciiToHex('did/verificationMethod');
-      let dic = { id: `did:ethr:development:${accountFrom.address}#${nameAlias}`, controller: `did:ethr:development:${accountFrom.address}`}
-      s = JSON.stringify(dic);
-      bvalue = toBuffer(asciiToHex(s));
-      setAttribute = DidReg.methods.setAttribute(accountFrom.address, b32, bvalue, 30000000);
-      gas = await setAttribute.estimateGas({from: accountFrom.address})
-      receipt = await setAttribute.send({from: accountFrom.address, gas: Math.trunc(gas*(2.5))});
-    }
+    returnedTx.push({tx: receipt.transactionHash, block: receipt.blockNumber})
 
-    return accountFrom.address;
+    return returnedTx;
     
   }
 
@@ -97,11 +106,17 @@ module.exports = function (HTTP_URL, secretKey) {
     let additionalVer;
     let result; 
     result = await readAlias(`${accountFrom.address}`);
-    console.log(await readAlias(`${accountFrom.address}`));
     didDocument['alsoKnownAs'] = result[0];
     additionalVer = result[1];
     for (let i in additionalVer) didDocument['verificationMethod'].push(additionalVer[i]);
     return didDocument;
+  }
+
+  function createAlias(nameAlias, alias, verificationMethod) {
+    let b32 = "did/alsoKnownAs"; // asciiToHex("did/alsoKnownAs");
+    let s = (verificationMethod !== undefined ? { typeAlias: nameAlias, _alias: alias, _verificationMethod: verificationMethod.map((e) => {return Buffer.from(e)}) } : { typeAlias: nameAlias, _alias: alias })
+    let bvalue = s// toBuffer(asciiToHex(s));
+    return [b32, bvalue];
   }
 
   async function readAlias(address) {
@@ -118,12 +133,10 @@ module.exports = function (HTTP_URL, secretKey) {
       if ( address == resultEvent[i].returnValues.identity 
             && ((Date.now() / 1000) < parseInt(resultEvent[i].returnValues.validTo))) 
             if (name.includes('alsoKnownAs')) {
+              console.log(name, value);
                 finalResultAlias.push(JSON.parse(value));
-                console.log('tick')
-            } else if (name.includes('verificationMethod')) {
-              finalResultVer.push(JSON.parse(value))
             }
-    }
+          }
     return [finalResultAlias, finalResultVer];
   }
 }

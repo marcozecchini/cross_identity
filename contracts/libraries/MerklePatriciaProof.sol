@@ -18,7 +18,9 @@ library MerklePatriciaProof {
      * @param root The root hash of the trie.
      * @return return code indicating result. Return code 0 indicates a positive verification
      */
-    function verify(bytes memory value, bytes memory encodedPath, bytes memory rlpParentNodes, bytes32 root) internal pure returns (uint code) {
+    event db(uint i, uint length, bytes32 expected, bytes32 actual, bytes currentNode);
+    event position(string m);
+    function verifyWithoutDecoding(bytes memory value, bytes memory encodedPath, bytes memory rlpParentNodes, bytes32 root) internal returns (uint code) {
         RLPReader.RLPItem memory item = RLPReader.toRlpItem(rlpParentNodes);
 
         // list of the rlp encoded proof nodes
@@ -42,23 +44,21 @@ library MerklePatriciaProof {
 
         // iterate all the rlp encoded nodes in the proof
         for (uint i = 0; i < parentNodes.length; i++) {
-
             // the actual path is longer than the given path - key not found
             if (pathPtr > path.length) { return (2); }
 
             // next node in the proof is read
-            currentNode = RLPReader.toBytes(parentNodes[i]);
-
+            currentNode = RLPReader.toRlpBytes(parentNodes[i]);
+            emit db(i, parentNodes.length, nodeKey, keccak256(currentNode), currentNode);
             // the hash of the current-node does not represent the desired nodeKey, this is especially the case at the
             // beginning of the proof where the transactionRootHash is verified
             if (nodeKey != keccak256(currentNode)) { return (3); }
-
             // the proof-node is transformed into the byte-array containing key/value/branch nodes depending on the type of the proof node
             currentNodeList = RLPReader.toList(RLPReader.toRlpItem(currentNode));
 
             if (currentNodeList.length == 17) {
                 // branch node
-
+                emit position("branch");
                 // we reached at the given level
                 if (pathPtr == path.length) {
                     if (keccak256(RLPReader.toBytes(currentNodeList[16])) == keccak256(value)) {
@@ -79,7 +79,88 @@ library MerklePatriciaProof {
                 pathPtr += 1;
             } else if (currentNodeList.length == 2) {
                 // extension or leaf node
+                emit position("branch");
+                pathPtr += _nibblesToTraverse(RLPReader.toBytes(currentNodeList[0]), path, pathPtr);
 
+                if (pathPtr == path.length) {//leaf node
+                    if (keccak256(RLPReader.toBytes(currentNodeList[1])) == keccak256(value)) {
+                        return (0);
+                    } else {
+                        return (6);
+                    }
+                }
+                //extension node
+                if (_nibblesToTraverse(RLPReader.toBytes(currentNodeList[0]), path, pathPtr) == 0) {
+                    return (7);
+                }
+
+                nodeKey = bytes32(RLPReader.toUint(currentNodeList[1]));
+            } else {
+                return (8);
+            }
+        }
+    }
+
+    function verify(bytes memory value, bytes memory encodedPath, bytes memory rlpParentNodes, bytes32 root) internal returns (uint code) {
+        RLPReader.RLPItem memory item = RLPReader.toRlpItem(rlpParentNodes);
+
+        // list of the rlp encoded proof nodes
+        // [node1, node2, node3...]
+        RLPReader.RLPItem[] memory parentNodes = RLPReader.toList(item);
+
+        bytes memory currentNode;
+        RLPReader.RLPItem[] memory currentNodeList;
+
+        // merkle-root hash - this should be calculated by all the following child-nodes
+        bytes32 nodeKey = root;
+
+        // current height-level of the trie
+        uint pathPtr = 0;
+
+        // [8, 1, 8, 8]
+        bytes memory path = _getNibbleArray(encodedPath);
+
+        // path is empty - this is equal as
+        if (path.length == 0) { return (1); }
+
+        // iterate all the rlp encoded nodes in the proof
+        for (uint i = 0; i < parentNodes.length; i++) {
+            // the actual path is longer than the given path - key not found
+            if (pathPtr > path.length) { return (2); }
+
+            // next node in the proof is read
+            currentNode = RLPReader.toBytes(parentNodes[i]);
+            emit db(i, parentNodes.length, nodeKey, keccak256(currentNode), currentNode);
+            // the hash of the current-node does not represent the desired nodeKey, this is especially the case at the
+            // beginning of the proof where the transactionRootHash is verified
+            if (nodeKey != keccak256(currentNode)) { return (3); }
+            // the proof-node is transformed into the byte-array containing key/value/branch nodes depending on the type of the proof node
+            currentNodeList = RLPReader.toList(RLPReader.toRlpItem(currentNode));
+
+            if (currentNodeList.length == 17) {
+                // branch node
+                emit position("branch");
+                // we reached at the given level
+                if (pathPtr == path.length) {
+                    if (keccak256(RLPReader.toBytes(currentNodeList[16])) == keccak256(value)) {
+                        return (0);
+                    } else {
+                        return (4);
+                    }
+                }
+
+                uint8 nextPathNibble = uint8(path[pathPtr]);
+
+                if (nextPathNibble > 16) {
+                    return (5);
+                }
+
+                nodeKey = bytes32(RLPReader.toUint(currentNodeList[nextPathNibble]));
+
+                pathPtr += 1;
+            } else if (currentNodeList.length == 2) {
+                // extension or leaf node
+                emit position("branch");
                 pathPtr += _nibblesToTraverse(RLPReader.toBytes(currentNodeList[0]), path, pathPtr);
 
                 if (pathPtr == path.length) {//leaf node

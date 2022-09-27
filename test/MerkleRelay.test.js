@@ -35,19 +35,23 @@ contract('MerkleRelay', async(accounts) => {
     let ethash;
     let mainWeb3;
     let sourceWeb3;
-
+    let next_gas_price;
     
 
     describe('MerkleRelay: MerkleTree functions', function() {
-
         before(async () => {
             mainWeb3 = new Web3(INFURA_MAINNET_ENDPOINT);
+            const block = await mainWeb3.eth.getBlock('latest');
+            next_gas_price = Math.ceil(block.baseFeePerGas);
     
         });
     
         beforeEach(async () => {
+            const block = await mainWeb3.eth.getBlock('latest');
+            const next_gas_price = Math.ceil(block.baseFeePerGas);
             merklerelay = await MerkleTreeTest.new({
                 from: accounts[0],
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
         });
@@ -68,6 +72,7 @@ contract('MerkleRelay', async(accounts) => {
 
             let ret = await merklerelay.updateTree(elements.map(Buffer.from), {
                 from: accounts[0],
+                maxFeePerGas: next_gas_price,
                 gas:3000000,
                 gasPrice: GAS_PRICE_IN_WEI
             });
@@ -93,6 +98,7 @@ contract('MerkleRelay', async(accounts) => {
 
             let ret = await merklerelay.updateTree(elements.map(Buffer.from), {
                 from: accounts[0],
+                maxFeePerGas: next_gas_price,
                 gas:3000000,
                 gasPrice: GAS_PRICE_IN_WEI
             });
@@ -117,6 +123,7 @@ contract('MerkleRelay', async(accounts) => {
 
             let ret = await merklerelay.updateTree(elements.map(Buffer.from), {
                 from: accounts[0],
+                maxFeePerGas: next_gas_price,
                 gas:3000000,
                 gasPrice: GAS_PRICE_IN_WEI
             });
@@ -131,6 +138,7 @@ contract('MerkleRelay', async(accounts) => {
 
             ret = await merklerelay.verifyBlock(data_array, position_array, elements[1], root, {
                 from: accounts[0],
+                maxFeePerGas: next_gas_price,
                 gas:3000000,
                 gasPrice: GAS_PRICE_IN_WEI
             });
@@ -154,6 +162,7 @@ contract('MerkleRelay', async(accounts) => {
 
             let ret = await merklerelay.updateTree(elements.map(Buffer.from), {
                 from: accounts[0],
+                maxFeePerGas: next_gas_price,
                 gas:3000000,
                 gasPrice: GAS_PRICE_IN_WEI
             });
@@ -168,6 +177,7 @@ contract('MerkleRelay', async(accounts) => {
 
             ret = await merklerelay.verifyBlock(data_array, position_array, elements[0], root, {
                 from: accounts[0],
+                maxFeePerGas: next_gas_price,
                 gas:3000000,
                 gasPrice: GAS_PRICE_IN_WEI
             });
@@ -191,6 +201,7 @@ contract('MerkleRelay', async(accounts) => {
 
             let ret = await merklerelay.updateTree(elements.map(Buffer.from), {
                 from: accounts[0],
+                maxFeePerGas: next_gas_price,
                 gas:3000000,
                 gasPrice: GAS_PRICE_IN_WEI
             });
@@ -205,6 +216,7 @@ contract('MerkleRelay', async(accounts) => {
 
             await expectRevert(merklerelay.verifyBlock(data_array, position_array.slice(0,position_array.length-1), elements[1], root, {
                 from: accounts[0],
+                maxFeePerGas: next_gas_price,
                 gas:3000000,
                 gasPrice: GAS_PRICE_IN_WEI
             }), "proof and position have different length");
@@ -216,6 +228,8 @@ contract('MerkleRelay', async(accounts) => {
         before(async () => {
             mainWeb3 = new Web3(INFURA_MAINNET_ENDPOINT);
             ethash = await EthashOwner.new();
+            const block = await mainWeb3.eth.getBlock('latest');
+            next_gas_price = Math.ceil(block.baseFeePerGas);
             // const epochData = require(EPOCHFILE);
     
             // console.log(`Submitting data for epoch ${EPOCH} to Ethash contract...`);
@@ -230,7 +244,8 @@ contract('MerkleRelay', async(accounts) => {
     
             merklerelay = await MerkleRelay.new(genesisRlpHeader, genesisBlock.totalDifficulty, ethash.address, {
                 from: accounts[0],
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
             });
         });
 
@@ -241,7 +256,9 @@ contract('MerkleRelay', async(accounts) => {
                 merklerelay.depositStake(stake, {
                     from: accounts[0],
                     value: stake.add(new BN(1)),
-                    gasPrice: GAS_PRICE_IN_WEI
+                    gasPrice: GAS_PRICE_IN_WEI,
+                    maxFeePerGas: next_gas_price,
+
                 }),
                 "transfer amount not equal to function parameter");
         });
@@ -251,12 +268,12 @@ contract('MerkleRelay', async(accounts) => {
             const stake = new BN(15);
             const balanceBeforeCall = await merklerelay.getStake({from: accounts[0]});
 
-            await merklerelay.depositStake(stake, {from: accounts[0], value: stake});
+            await merklerelay.depositStake(stake, {from: accounts[0], value: stake, maxFeePerGas: next_gas_price});
             const balanceAfterCall = await merklerelay.getStake({from: accounts[0]});
 
             expect(balanceAfterCall).to.be.bignumber.equal(balanceBeforeCall.add(stake));
 
-            await merklerelay.withdrawStake(stake, {from: accounts[0]});
+            await merklerelay.withdrawStake(stake, {from: accounts[0], maxFeePerGas: next_gas_price});
             const balanceAfterCallBis = await merklerelay.getStake({from: accounts[0]});
 
             expect(balanceAfterCallBis).to.be.bignumber.equal(balanceBeforeCall);
@@ -270,6 +287,8 @@ contract('MerkleRelay', async(accounts) => {
                 mainWeb3 = new Web3(INFURA_MAINNET_ENDPOINT);
                 ethash = await EthashOwner.new();
                 const epochData = require(EPOCHFILE);
+                const block = await mainWeb3.eth.getBlock('latest');
+                next_gas_price = Math.ceil(block.baseFeePerGas);
         
                 console.log(`Submitting data for epoch ${EPOCH} to Ethash contract...`);
                 await submitEpochData(ethash, EPOCH, epochData.FullSizeIn128Resolution, epochData.BranchDepth, epochData.MerkleNodes);
@@ -283,7 +302,8 @@ contract('MerkleRelay', async(accounts) => {
         
                 merklerelay = await MerkleRelay.new(genesisRlpHeader, genesisBlock.totalDifficulty, ethash.address, {
                     from: accounts[0],
-                    gasPrice: GAS_PRICE_IN_WEI
+                    gasPrice: GAS_PRICE_IN_WEI,
+                    maxFeePerGas: next_gas_price
                 });
             });
         
@@ -292,7 +312,8 @@ contract('MerkleRelay', async(accounts) => {
                 await merklerelay.depositStake(stake, {
                     from: accounts[0],
                     value: stake,
-                    gasPrice: GAS_PRICE_IN_WEI
+                    gasPrice: GAS_PRICE_IN_WEI,
+                    maxFeePerGas: next_gas_price
                 });
 
                 let elements = [];
@@ -310,11 +331,12 @@ contract('MerkleRelay', async(accounts) => {
                 let ret = await merklerelay.submitRoot(elements.map(Buffer.from), genesisBlock.hash, {
                     from: accounts[0],
                     gas:3000000,
-                    gasPrice: GAS_PRICE_IN_WEI
+                    gasPrice: GAS_PRICE_IN_WEI,
+                    maxFeePerGas: next_gas_price
                 });
                 
                 expectEvent.inLogs(ret.logs, 'NewRoot', {root: root});
-                await merklerelay.withdrawStake(stake, {from: accounts[0]});
+                await merklerelay.withdrawStake(stake, {from: accounts[0], maxFeePerGas: next_gas_price});
 
             });
 
@@ -323,7 +345,8 @@ contract('MerkleRelay', async(accounts) => {
                 await merklerelay.depositStake(stake, {
                     from: accounts[0],
                     value: stake,
-                    gasPrice: GAS_PRICE_IN_WEI
+                    gasPrice: GAS_PRICE_IN_WEI,
+                    maxFeePerGas: next_gas_price
                 });
                 let elements = [];
                 let genesisBlock = (await mainWeb3.eth.getBlock(GENESIS_BLOCK));
@@ -338,12 +361,13 @@ contract('MerkleRelay', async(accounts) => {
                 let ret = await merklerelay.submitRoot(elements.map(Buffer.from), genesisBlock.hash, {
                     from: accounts[0],
                     gas: 8000000,
-                    gasPrice: GAS_PRICE_IN_WEI
+                    gasPrice: GAS_PRICE_IN_WEI,
+                    maxFeePerGas: next_gas_price
                 });
                 
                 expectEvent.inLogs(ret.logs, 'NewRoot', {root: root});
                 console.log("Gas used for updating the tree:", ret.receipt.gasUsed);
-                await merklerelay.withdrawStake(stake, {from: accounts[0]});
+                await merklerelay.withdrawStake(stake, {from: accounts[0], maxFeePerGas: next_gas_price});
                 
             });
 
@@ -357,7 +381,8 @@ contract('MerkleRelay', async(accounts) => {
                 await merklerelay.depositStake(stake, {
                     from: accounts[0],
                     value: stake,
-                    gasPrice: GAS_PRICE_IN_WEI
+                    gasPrice: GAS_PRICE_IN_WEI,
+                    maxFeePerGas: next_gas_price
                 });
 
                 let genesisBlock = (await mainWeb3.eth.getBlock(GENESIS_BLOCK));
@@ -379,7 +404,8 @@ contract('MerkleRelay', async(accounts) => {
                     let ret = await merklerelay.submitRoot(elements.map(Buffer.from), parentHash, {
                         from: accounts[0],
                         gas: 3000000,
-                        gasPrice: GAS_PRICE_IN_WEI
+                        gasPrice: GAS_PRICE_IN_WEI,
+                        maxFeePerGas: next_gas_price
                     });
                     
                     expectEvent.inLogs(ret.logs, 'NewRoot', {root: root});
@@ -429,7 +455,8 @@ contract('MerkleRelay', async(accounts) => {
                 await merklerelay.depositStake(stake, {
                     from: accounts[0],
                     value: stake,
-                    gasPrice: GAS_PRICE_IN_WEI
+                    gasPrice: GAS_PRICE_IN_WEI,
+                    maxFeePerGas: next_gas_price
                 });
 
                 let genesisBlock = (await mainWeb3.eth.getBlock(GENESIS_BLOCK));
@@ -447,7 +474,8 @@ contract('MerkleRelay', async(accounts) => {
                 let ret = await merklerelay.submitRoot(elements.map(Buffer.from), parentHash, {
                     from: accounts[0],
                     gas: 3000000,
-                    gasPrice: GAS_PRICE_IN_WEI
+                    gasPrice: GAS_PRICE_IN_WEI,
+                    maxFeePerGas: next_gas_price
                 });
                 
                 expectEvent.inLogs(ret.logs, 'NewRoot', {root: root});
@@ -485,7 +513,8 @@ contract('MerkleRelay', async(accounts) => {
                 ret = await merklerelay.submitRoot(elements.map(Buffer.from), parentHash, {
                     from: accounts[0],
                     gas: 3000000,
-                    gasPrice: GAS_PRICE_IN_WEI
+                    gasPrice: GAS_PRICE_IN_WEI,
+                    maxFeePerGas: next_gas_price
                 });
 
                 expectEvent.inLogs(ret.logs, 'NewRoot', {root: rootBis});
@@ -528,7 +557,8 @@ contract('MerkleRelay', async(accounts) => {
                 await merklerelay.depositStake(stake, {
                     from: accounts[0],
                     value: stake,
-                    gasPrice: GAS_PRICE_IN_WEI
+                    gasPrice: GAS_PRICE_IN_WEI,
+                    maxFeePerGas: next_gas_price
                 });
 
                 let genesisBlock = (await mainWeb3.eth.getBlock(GENESIS_BLOCK));
@@ -547,7 +577,8 @@ contract('MerkleRelay', async(accounts) => {
                 let ret = await merklerelay.submitRoot(elements.map(Buffer.from), parentHash, {
                     from: accounts[0],
                     gas: 3000000,
-                    gasPrice: GAS_PRICE_IN_WEI
+                    gasPrice: GAS_PRICE_IN_WEI,
+                    maxFeePerGas: next_gas_price
                 });
                 
                 expectEvent.inLogs(ret.logs, 'NewRoot', {root: root});
@@ -583,7 +614,8 @@ contract('MerkleRelay', async(accounts) => {
                 ret = await merklerelay.submitRoot(elementsBis.map(Buffer.from), parentHash, {
                     from: accounts[0],
                     gas: 3000000,
-                    gasPrice: GAS_PRICE_IN_WEI
+                    gasPrice: GAS_PRICE_IN_WEI,
+                    maxFeePerGas: next_gas_price
                 });
                 
                 expectEvent.inLogs(ret.logs, 'NewRoot', {root: rootBis});
@@ -625,7 +657,8 @@ contract('MerkleRelay', async(accounts) => {
                 ret = await merklerelay.submitRoot(elements.map(Buffer.from), parentHash, {
                     from: accounts[0],
                     gas: 3000000,
-                    gasPrice: GAS_PRICE_IN_WEI
+                    gasPrice: GAS_PRICE_IN_WEI,
+                    maxFeePerGas: next_gas_price
                 });
                 
                 expectEvent.inLogs(ret.logs, 'NewRoot', {root: rootTris});
@@ -674,7 +707,8 @@ contract('MerkleRelay', async(accounts) => {
             const genesisRlpHeader = createRLPHeader(genesisBlock);
             merklerelay = await MerkleRelay.new(genesisRlpHeader, genesisBlock.totalDifficulty, ethash.address, {
                 from: accounts[0],
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });
             genesisTime = await time.latest();
 
@@ -692,13 +726,15 @@ contract('MerkleRelay', async(accounts) => {
             await merklerelay.depositStake(stakeAccount0, {
                 from: accounts[0],
                 value: stakeAccount0,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });  // submits block 1
 
             await merklerelay.depositStake(stakeAccount1, {
                 from: accounts[1],
                 value: stakeAccount1,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });  // submits blocks 2,3
 
             let genesisBlock = (await mainWeb3.eth.getBlock(GENESIS_BLOCK));
@@ -735,7 +771,8 @@ contract('MerkleRelay', async(accounts) => {
             ret = await merklerelay.submitRoot(elements.map(Buffer.from), parentHash, {
                 from: accounts[0],
                 gas: 3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });
             
             expectEvent.inLogs(ret.logs, 'NewRoot', {root: root});
@@ -765,7 +802,8 @@ contract('MerkleRelay', async(accounts) => {
                     createRLPHeader(block1), blockParentProof, root, root, powMetadata, {
                 from: accounts[1],
                 gas: 3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });
             expectEvent.inLogs(ret.logs, 'DisputeBlock', {returnCode: new BN(2)});
             
@@ -806,13 +844,15 @@ contract('MerkleRelay', async(accounts) => {
             await merklerelay.depositStake(stakeAccount0, {
                 from: accounts[0],
                 value: stakeAccount0,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });  // submits block 1
 
             await merklerelay.depositStake(stakeAccount1, {
                 from: accounts[1],
                 value: stakeAccount1,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });  // submits blocks 2,3
 
             let genesisBlock = (await mainWeb3.eth.getBlock(GENESIS_BLOCK));
@@ -856,7 +896,8 @@ contract('MerkleRelay', async(accounts) => {
             ret = await merklerelay.submitRoot(elements.map(Buffer.from), parentHash, {
                 from: accounts[0],
                 gas: 8000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });
             
             expectEvent.inLogs(ret.logs, 'NewRoot', {root: root});
@@ -878,7 +919,8 @@ contract('MerkleRelay', async(accounts) => {
             ret = await merklerelay.submitRoot(elementsBis.map(Buffer.from), parentHash, {
                 from: accounts[0],
                 gas: 3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });
             
             expectEvent.inLogs(ret.logs, 'NewRoot', {root: rootBis});
@@ -908,7 +950,8 @@ contract('MerkleRelay', async(accounts) => {
                     createRLPHeader(block4), blockParentProof, rootBis, root, powMetadata, {
                 from: accounts[1],
                 gas: 3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });
 
             expectEvent.inLogs(ret.logs, 'DisputeBlock', {returnCode: new BN(2)});
@@ -950,13 +993,15 @@ contract('MerkleRelay', async(accounts) => {
             await merklerelay.depositStake(stakeAccount0, {
                 from: accounts[0],
                 value: stakeAccount0,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });  // submits block 1
 
             await merklerelay.depositStake(stakeAccount1, {
                 from: accounts[1],
                 value: stakeAccount1,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });  // submits blocks 2,3
 
             let genesisBlock = (await mainWeb3.eth.getBlock(GENESIS_BLOCK));
@@ -990,7 +1035,8 @@ contract('MerkleRelay', async(accounts) => {
             ret = await merklerelay.submitRoot(elements.map(Buffer.from), parentHash, {
                 from: accounts[0],
                 gas: 3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });
             
             expectEvent.inLogs(ret.logs, 'NewRoot', {root: root});
@@ -1011,7 +1057,8 @@ contract('MerkleRelay', async(accounts) => {
             ret = await merklerelay.submitRoot(elementsBis.map(Buffer.from), parentHash, {
                 from: accounts[0],
                 gas: 3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });
             
             expectEvent.inLogs(ret.logs, 'NewRoot', {root: rootBis});
@@ -1042,7 +1089,8 @@ contract('MerkleRelay', async(accounts) => {
                     createRLPHeader(block4), blockParentProof, rootBis, root, powMetadata, {
                 from: accounts[1],
                 gas: 3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });
             expectEvent.inLogs(ret.logs, 'DisputeBlock', {returnCode: new BN(0)});
             
@@ -1083,13 +1131,16 @@ contract('MerkleRelay', async(accounts) => {
             await merklerelay.depositStake(stakeAccount0, {
                 from: accounts[0],
                 value: stakeAccount0,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });  // submits block 1
 
             await merklerelay.depositStake(stakeAccount1, {
                 from: accounts[1],
                 value: stakeAccount1,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
+
             });  // submits blocks 2,3
 
             let genesisBlock = (await mainWeb3.eth.getBlock(GENESIS_BLOCK));
@@ -1134,7 +1185,8 @@ contract('MerkleRelay', async(accounts) => {
             ret = await merklerelay.submitRoot(elements.map(Buffer.from), parentHash, {
                 from: accounts[0],
                 gas: 3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });
             
             expectEvent.inLogs(ret.logs, 'NewRoot', {root: root});
@@ -1156,7 +1208,8 @@ contract('MerkleRelay', async(accounts) => {
             ret = await merklerelay.submitRoot(elementsBis.map(Buffer.from), parentHash, {
                 from: accounts[0],
                 gas: 3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });
             
             expectEvent.inLogs(ret.logs, 'NewRoot', {root: rootBis});
@@ -1186,7 +1239,8 @@ contract('MerkleRelay', async(accounts) => {
                     createRLPHeader(block4), blockParentProof, rootBis, root, powMetadata, {
                 from: accounts[1],
                 gas: 3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });
             expectEvent.inLogs(ret.logs, 'DisputeBlock', {returnCode: new BN(7)});
             
@@ -1227,13 +1281,15 @@ contract('MerkleRelay', async(accounts) => {
             await merklerelay.depositStake(stakeAccount0, {
                 from: accounts[0],
                 value: stakeAccount0,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });  // submits block 1
 
             await merklerelay.depositStake(stakeAccount1, {
                 from: accounts[1],
                 value: stakeAccount1,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });  // submits blocks 2,3
 
             let genesisBlock = (await mainWeb3.eth.getBlock(GENESIS_BLOCK));
@@ -1277,7 +1333,8 @@ contract('MerkleRelay', async(accounts) => {
             ret = await merklerelay.submitRoot(elements.map(Buffer.from), parentHash, {
                 from: accounts[0],
                 gas: 3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });
             
             expectEvent.inLogs(ret.logs, 'NewRoot', {root: root});
@@ -1299,7 +1356,8 @@ contract('MerkleRelay', async(accounts) => {
             ret = await merklerelay.submitRoot(elementsBis.map(Buffer.from), parentHash, {
                 from: accounts[0],
                 gas: 3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });
             
             expectEvent.inLogs(ret.logs, 'NewRoot', {root: rootBis});
@@ -1329,7 +1387,8 @@ contract('MerkleRelay', async(accounts) => {
                     createRLPHeader(block4), blockParentProof, rootBis, root, powMetadata, {
                 from: accounts[1],
                 gas: 3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });
             expectEvent.inLogs(ret.logs, 'DisputeBlock', {returnCode: new BN(8)});
             
@@ -1369,6 +1428,7 @@ contract('MerkleRelay', async(accounts) => {
             const stakeAccount1 = requiredStakePerBlock.mul(new BN(2));
             await merklerelay.depositStake(stakeAccount0, {
                 from: accounts[0],
+                maxFeePerGas: next_gas_price,
                 value: stakeAccount0,
                 gasPrice: GAS_PRICE_IN_WEI
             });  // submits block 1
@@ -1376,7 +1436,8 @@ contract('MerkleRelay', async(accounts) => {
             await merklerelay.depositStake(stakeAccount1, {
                 from: accounts[1],
                 value: stakeAccount1,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });  // submits blocks 2,3
 
             let genesisBlock = (await mainWeb3.eth.getBlock(GENESIS_BLOCK));
@@ -1420,7 +1481,8 @@ contract('MerkleRelay', async(accounts) => {
             ret = await merklerelay.submitRoot(elements.map(Buffer.from), parentHash, {
                 from: accounts[0],
                 gas: 8000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });
             
             expectEvent.inLogs(ret.logs, 'NewRoot', {root: root});
@@ -1442,6 +1504,7 @@ contract('MerkleRelay', async(accounts) => {
             ret = await merklerelay.submitRoot(elementsBis.map(Buffer.from), parentHash, {
                 from: accounts[0],
                 gas: 8000000,
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
             
@@ -1472,7 +1535,8 @@ contract('MerkleRelay', async(accounts) => {
                     createRLPHeader(block4), blockParentProof, rootBis, root, powMetadata, {
                 from: accounts[1],
                 gas: 3000000,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price
             });
             expectEvent.inLogs(ret.logs, 'DisputeBlock', {returnCode: new BN(9)});
             
@@ -1514,13 +1578,15 @@ contract('MerkleRelay', async(accounts) => {
             await merklerelay.depositStake(stakeAccount0, {
                 from: accounts[0],
                 value: stakeAccount0,
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });  // submits block 1
 
             await merklerelay.depositStake(stakeAccount1, {
                 from: accounts[1],
                 value: stakeAccount1,
-                gasPrice: GAS_PRICE_IN_WEI
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
             });  // submits blocks 2,3
 
             let genesisBlock = (await mainWeb3.eth.getBlock(GENESIS_BLOCK));
@@ -1553,6 +1619,7 @@ contract('MerkleRelay', async(accounts) => {
 
             ret = await merklerelay.submitRoot(elements.map(Buffer.from), parentHash, {
                 from: accounts[0],
+                maxFeePerGas: next_gas_price,
                 gas: 8000000,
                 gasPrice: GAS_PRICE_IN_WEI
             });
@@ -1575,6 +1642,7 @@ contract('MerkleRelay', async(accounts) => {
             ret = await merklerelay.submitRoot(elementsBis.map(Buffer.from), parentHash, {
                 from: accounts[0],
                 gas: 3000000,
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
             
@@ -1606,6 +1674,7 @@ contract('MerkleRelay', async(accounts) => {
             ret = await merklerelay.submitRoot(elementsTris.map(Buffer.from), parentHash, {
                 from: accounts[0],
                 gas: 3000000,
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
             
@@ -1637,6 +1706,7 @@ contract('MerkleRelay', async(accounts) => {
                     createRLPHeader(block4), blockParentProof, rootTris, root, powMetadata, {
                 from: accounts[1],
                 gas: 3000000,
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
 
@@ -1687,6 +1757,7 @@ contract('MerkleRelay', async(accounts) => {
 
             await merklerelay.depositStake(stakeAccount0, {
                 from: accounts[0],
+                maxFeePerGas: next_gas_price,
                 value: stakeAccount0,
                 gasPrice: GAS_PRICE_IN_WEI
             });  // submits block 1
@@ -1694,6 +1765,7 @@ contract('MerkleRelay', async(accounts) => {
             await merklerelay.depositStake(stakeAccount1, {
                 from: accounts[1],
                 value: stakeAccount1,
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });  // submits blocks 2,3
 
@@ -1728,6 +1800,7 @@ contract('MerkleRelay', async(accounts) => {
             ret = await merklerelay.submitRoot(elements.map(Buffer.from), parentHash, {
                 from: accounts[0],
                 gas: 8000000,
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
             
@@ -1766,6 +1839,7 @@ contract('MerkleRelay', async(accounts) => {
             ret = await merklerelay.submitRoot(elementsBis.map(Buffer.from), parentHash, {
                 from: accounts[0],
                 gas: 8000000,
+                maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
             
@@ -1802,6 +1876,7 @@ contract('MerkleRelay', async(accounts) => {
 
             ret = await merklerelay.verifyTransaction(verificationFee, requestedBlockInRlp, 0, Value, Path, Nodes, blockProof, rootBis, {
                 from: verifierAddr,
+                maxFeePerGas: next_gas_price,
                 value: verificationFee,
                 gas: 8000000,
                 gasPrice: GAS_PRICE_IN_WEI
@@ -1854,8 +1929,10 @@ contract('MerkleRelay', async(accounts) => {
     const withdrawStake = async (stake, accountAddr) => {
         const submitTime = await time.latest();
         const increasedTime = submitTime.add(LOCK_PERIOD).add(time.duration.seconds(1));
+        const block = await mainWeb3.eth.getBlock('latest');
+        next_gas_price = Math.ceil(block.baseFeePerGas);
         await time.increaseTo(increasedTime);  // unlock all blocks
-        await merklerelay.withdrawStake(stake, {from: accountAddr, gasPrice: GAS_PRICE_IN_WEI});
+        await merklerelay.withdrawStake(stake, {from: accountAddr, gasPrice: GAS_PRICE_IN_WEI,maxFeePerGas: next_gas_price,});
     };
 
     const assertRootEqual = (actual, expected) => {
