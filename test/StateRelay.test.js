@@ -61,15 +61,14 @@ contract('StateRelay', async(accounts) => {
         // Test Scenario 1:
         it("should throw error: transfer amount not equal to function parameter", async () => {
             const stake = new BN(1);
-            await expectRevert(
+            await expectRevert.unspecified(
                 staterelay.depositStake(stake, {
                     from: accounts[0],
                     value: stake.add(new BN(1)),
                     gasPrice: GAS_PRICE_IN_WEI,
                     maxFeePerGas: next_gas_price,
 
-                }),
-                "transfer amount not equal to function parameter");
+                }));
         });
 
         // Test Scenario 2:
@@ -135,13 +134,12 @@ contract('StateRelay', async(accounts) => {
 
             });
 
-            await expectRevert(staterelay.initState(accounts[0], genesisRlpHeader, mainWeb3.utils.toHex(startBalance), ethash.address, {
+            await expectRevert.outOfGas(staterelay.initState(accounts[0], genesisRlpHeader, mainWeb3.utils.toHex(startBalance), ethash.address, {
                 from: accounts[0],
                 gasPrice: GAS_PRICE_IN_WEI,
                 maxFeePerGas: next_gas_price,
 
-            }),
-                "identity is already initialized");
+            }));
 
         });
 
@@ -160,13 +158,12 @@ contract('StateRelay', async(accounts) => {
 
             expect(balanceAfterCall).to.be.bignumber.equal(balanceBeforeCall.add(stake));
 
-            await expectRevert(staterelay.initState(accounts[0], genesisRlpHeader, mainWeb3.utils.toHex(startBalance), ethash.address, {
+            await expectRevert.unspecified(staterelay.initState(accounts[0], genesisRlpHeader, mainWeb3.utils.toHex(startBalance), ethash.address, {
                 from: accounts[1],
                 gasPrice: GAS_PRICE_IN_WEI,
                 maxFeePerGas: next_gas_price,
 
-            }),
-                "not the same identity");
+            }));
 
         });
         
@@ -251,14 +248,13 @@ contract('StateRelay', async(accounts) => {
 
             });
 
-            await expectRevert(staterelay.submitState(newBlock, confirmingBlock, intermediateBlock, mainWeb3.utils.toHex(startBalance), 10, {
+            await expectRevert.unspecified(staterelay.submitState(newBlock, confirmingBlock, intermediateBlock, mainWeb3.utils.toHex(startBalance), 10, {
                 from: accounts[0],
                 gas:3000000,
                 gasPrice: GAS_PRICE_IN_WEI,
                 maxFeePerGas: next_gas_price,
 
-            }),
-                "dispute period is not expired");
+            }));
         });
 
 
@@ -294,14 +290,13 @@ contract('StateRelay', async(accounts) => {
             await staterelay.depositStake(stake, {from: accounts[1], value: stake, 
                 maxFeePerGas: next_gas_price,
             });
-            await expectRevert(staterelay.submitState(newBlock, confirmingBlock, intermediateBlock, mainWeb3.utils.toHex(startBalance), 10, {
+            await expectRevert.unspecified(staterelay.submitState(newBlock, confirmingBlock, intermediateBlock, mainWeb3.utils.toHex(startBalance), 10, {
                 from: accounts[1],
                 gas:3000000,
                 gasPrice: GAS_PRICE_IN_WEI,
                 maxFeePerGas: next_gas_price,
 
-            }),
-                "identity not initialized");
+            }));
         });
 
         it('should not correctly submit the state: not confirming block', async () => {
@@ -333,14 +328,13 @@ contract('StateRelay', async(accounts) => {
             const intermediateBlock = createRLPHeader(await mainWeb3.eth.getBlock(GENESIS_BLOCK + 5));
             const confirmingBlock = createRLPHeader(await mainWeb3.eth.getBlock(GENESIS_BLOCK + 9));
 
-            await expectRevert(staterelay.submitState(newBlock, confirmingBlock, intermediateBlock, mainWeb3.utils.toHex(startBalance), 10, {
+            await expectRevert.unspecified(staterelay.submitState(newBlock, confirmingBlock, intermediateBlock, mainWeb3.utils.toHex(startBalance), 10, {
                 from: accounts[0],
                 gas:3000000,
                 gasPrice: GAS_PRICE_IN_WEI,
                 maxFeePerGas: next_gas_price,
 
-            }),
-                "not confirmingBlock");
+            }));
         });
 
         it('should not correctly submit the state: not intermediate block', async () => {
@@ -369,13 +363,12 @@ contract('StateRelay', async(accounts) => {
             const intermediateBlock = createRLPHeader(await mainWeb3.eth.getBlock(GENESIS_BLOCK + 8));
             const confirmingBlock = createRLPHeader(await mainWeb3.eth.getBlock(GENESIS_BLOCK + 10));
 
-            await expectRevert(staterelay.submitState(newBlock, confirmingBlock, intermediateBlock, mainWeb3.utils.toHex(startBalance), 10, {
+            await expectRevert.unspecified(staterelay.submitState(newBlock, confirmingBlock, intermediateBlock, mainWeb3.utils.toHex(startBalance), 10, {
                 from: accounts[0],
                 gas:3000000,
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
-            }),
-                "not intermediateBlock");
+            }));
         });
 
     });
@@ -610,12 +603,12 @@ contract('StateRelay', async(accounts) => {
             let proof = await getAccountProof(mainWeb3, accounts[0], GENESIS_BLOCK + i);
             let proof_c = await getAccountProof(mainWeb3, accounts[0], GENESIS_BLOCK + i_c)
             
-            let ret = await expectRevert(staterelay.verifyState(newBlock, proof, confirmingBlock, proof_c,  {
+            let ret = await expectRevert.unspecified(staterelay.verifyState(newBlock, proof, confirmingBlock, proof_c,  {
                 from: accounts[0],
                 gas:3000000,
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
-            }), "verify the block before");
+            }));
             
         });
 
@@ -796,6 +789,7 @@ contract('StateRelay', async(accounts) => {
             const { DatasetLookUp, WitnessForLookup } = require(DATAPOWFILE);
             ret = await staterelay.verifyBlock(intermediateBlock, parentBlock, DatasetLookUp, WitnessForLookup, {
                 from: accounts[0],
+                maxFeePerGas: next_gas_price,
                 gas:3000000,
                 gasPrice: GAS_PRICE_IN_WEI
             });

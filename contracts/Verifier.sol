@@ -81,11 +81,11 @@ contract ECDSAVerifier is SignatureVerifier{
         // require(blockhash(header.blockNumber) == keccak256(encodedBlock), "block not in the chain");
 
         //TODO verifica che ci sia l'identità qui dentro
-        uint ret = MerklePatriciaProof.verifyWithoutDecoding(rlpEncodedValue, path, rlpEncodedNodes, getRoot(encodedBlock));
-        if (ret > 0) {
-            emit ddb(ret);
-            return 1;
-        }
+//        uint ret = MerklePatriciaProof.verifyWithoutDecoding(rlpEncodedValue, path, rlpEncodedNodes, getRoot(encodedBlock));
+//        if (ret > 0) {
+//            emit ddb(ret);
+//            return 1;
+//        }
         
         emit VerifiedSignature("prova");
         return 0;

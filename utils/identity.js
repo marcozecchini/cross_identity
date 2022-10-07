@@ -33,7 +33,7 @@ module.exports = function (HTTP_URL, secretKey, abi, bytecode) {
               accountFrom.privateKey
             );
           const createReceipt = await web3.eth.sendSignedTransaction(createTransaction.rawTransaction);
-          console.log(`Contract deployed at address: ${createReceipt.contractAddress}`);
+          // console.log(`Contract deployed at address: ${createReceipt.contractAddress}`);
 
           DidReg =  abi === undefined? new web3.eth.Contract(DidRegistryContract.abi, createReceipt.contractAddress): new web3.eth.Contract(abi, createReceipt.contractAddress);
           return createReceipt.contractAddress;
@@ -114,8 +114,8 @@ module.exports = function (HTTP_URL, secretKey, abi, bytecode) {
 
   function createAlias(nameAlias, alias, verificationMethod) {
     let b32 = "did/alsoKnownAs"; // asciiToHex("did/alsoKnownAs");
-    let s = (verificationMethod !== undefined ? { typeAlias: nameAlias, _alias: alias, _verificationMethod: verificationMethod.map((e) => {return Buffer.from(e)}) } : { typeAlias: nameAlias, _alias: alias })
-    let bvalue = s// toBuffer(asciiToHex(s));
+    let s = (verificationMethod !== undefined ? { nameAlias: nameAlias, _alias: verificationMethod[1], _type: Buffer.from(verificationMethod[0]) } : { typeAlias: nameAlias, _alias: alias })
+    let bvalue = s // toBuffer(asciiToHex(s));
     return [b32, bvalue];
   }
 
@@ -130,7 +130,7 @@ module.exports = function (HTTP_URL, secretKey, abi, bytecode) {
     for (let i = 0; i <= resultEvent.length - 1; i++) {
       let name = hexToAscii(resultEvent[i].returnValues.name).split('/')[1];
       let value = hexToAscii(resultEvent[i].returnValues.value);
-      if ( address == resultEvent[i].returnValues.identity 
+      if ( address === resultEvent[i].returnValues.identity
             && ((Date.now() / 1000) < parseInt(resultEvent[i].returnValues.validTo))) 
             if (name.includes('alsoKnownAs')) {
               console.log(name, value);

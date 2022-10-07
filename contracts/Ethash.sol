@@ -1,7 +1,4 @@
-// SPDX-License-Identifier: MIT
 pragma solidity >=0.7.0 <0.9.0;
-
-import "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @dev These contracts are used to verify Proof of Work within a smart contract.
 ///      The algorithms have been extracted from the implementation of smart pool (https://github.com/smartpool)
@@ -372,12 +369,12 @@ contract Ethash is SHA3_512 {
     }
 
     event SetEpochData( address indexed sender, uint error, uint errorInfo );
-    function _setEpochData( uint epoch,
+    function setEpochData( uint epoch,
         uint fullSizeIn128Resultion,
         uint branchDepth,
         uint[] memory merkleNodes,
         uint start,
-        uint numElems ) internal {
+        uint numElems ) public {
 
         for( uint i = 0 ; i < numElems ; i++ ) {
             if( epochData[epoch].merkleNodes[start+i] > 0 ) {
@@ -425,10 +422,10 @@ contract Ethash is SHA3_512 {
             assembly {
                 let offset := mul(i,0x20)
 
-            //mix[i] = s[i];
+                //mix[i] = s[i];
                 mstore(add(mix,offset),mload(add(s,offset)))
 
-            // mix[i+16] = s[i];
+                // mix[i+16] = s[i];
                 mstore(add(mix,add(0x200,offset)),mload(add(s,offset)))
             }
         }
@@ -446,47 +443,47 @@ contract Ethash is SHA3_512 {
             for( j = 0 ; j < 8 ; j++ ) {
 
                 assembly{
-                //mix[j] = fnv(mix[j], dataSetLookup[4*i] & varFFFFFFFF );
+                    //mix[j] = fnv(mix[j], dataSetLookup[4*i] & varFFFFFFFF );
                     let dataOffset := add(mul(0x80,i),add(dataSetLookup,0x20))
                     let dataValue   := and(mload(dataOffset),0xFFFFFFFF)
 
                     let mixOffset := add(mix,mul(0x20,j))
                     let mixValue  := mload(mixOffset)
 
-                // fnv = return ((v1*0x01000193) ^ v2) & 0xFFFFFFFF;
+                    // fnv = return ((v1*0x01000193) ^ v2) & 0xFFFFFFFF;
                     let fnvValue := and(xor(mul(mixValue,0x01000193),dataValue),0xFFFFFFFF)
                     mstore(mixOffset,fnvValue)
 
-                //mix[j+8] = fnv(mix[j+8], dataSetLookup[4*i + 1] & 0xFFFFFFFF );
+                    //mix[j+8] = fnv(mix[j+8], dataSetLookup[4*i + 1] & 0xFFFFFFFF );
                     dataOffset := add(dataOffset,0x20)
                     dataValue   := and(mload(dataOffset),0xFFFFFFFF)
 
                     mixOffset := add(mixOffset,0x100)
                     mixValue  := mload(mixOffset)
 
-                // fnv = return ((v1*0x01000193) ^ v2) & 0xFFFFFFFF;
+                    // fnv = return ((v1*0x01000193) ^ v2) & 0xFFFFFFFF;
                     fnvValue := and(xor(mul(mixValue,0x01000193),dataValue),0xFFFFFFFF)
                     mstore(mixOffset,fnvValue)
 
-                //mix[j+16] = fnv(mix[j+16], dataSetLookup[4*i + 2] & 0xFFFFFFFF );
+                    //mix[j+16] = fnv(mix[j+16], dataSetLookup[4*i + 2] & 0xFFFFFFFF );
                     dataOffset := add(dataOffset,0x20)
                     dataValue   := and(mload(dataOffset),0xFFFFFFFF)
 
                     mixOffset := add(mixOffset,0x100)
                     mixValue  := mload(mixOffset)
 
-                // fnv = return ((v1*0x01000193) ^ v2) & 0xFFFFFFFF;
+                    // fnv = return ((v1*0x01000193) ^ v2) & 0xFFFFFFFF;
                     fnvValue := and(xor(mul(mixValue,0x01000193),dataValue),0xFFFFFFFF)
                     mstore(mixOffset,fnvValue)
 
-                //mix[j+24] = fnv(mix[j+24], dataSetLookup[4*i + 3] & 0xFFFFFFFF );
+                    //mix[j+24] = fnv(mix[j+24], dataSetLookup[4*i + 3] & 0xFFFFFFFF );
                     dataOffset := add(dataOffset,0x20)
                     dataValue   := and(mload(dataOffset),0xFFFFFFFF)
 
                     mixOffset := add(mixOffset,0x100)
                     mixValue  := mload(mixOffset)
 
-                // fnv = return ((v1*0x01000193) ^ v2) & 0xFFFFFFFF;
+                    // fnv = return ((v1*0x01000193) ^ v2) & 0xFFFFFFFF;
                     fnvValue := and(xor(mul(mixValue,0x01000193),dataValue),0xFFFFFFFF)
                     mstore(mixOffset,fnvValue)
 
@@ -559,13 +556,5 @@ contract Ethash is SHA3_512 {
         }
 
         return (0, 0);
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-contract EthashOwner is Ethash, Ownable {
-    function setEpochData( uint epoch, uint fullSizeIn128Resultion, uint branchDepth, uint[] memory merkleNodes, uint start, uint numElems ) public onlyOwner {
-        super._setEpochData(epoch, fullSizeIn128Resultion, branchDepth, merkleNodes, start, numElems);
     }
 }
