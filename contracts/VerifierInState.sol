@@ -15,8 +15,6 @@ abstract contract SignatureVerifierV2 {
 contract ECDSAVerifierV2 is SignatureVerifierV2 {
     bytes constant SIGNATURETYPE = bytes("Secp256k1VerificationKey2018");
 
-    event idDB(address ad, bytes32 hash);
-
     function verifySignature(ccIdentityContract.Identity memory identity, uint8 v, bytes32 r, bytes32 s) public override  returns (uint) {
         bytes32 hash = blockhash(identity.blockNumber);
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
@@ -50,14 +48,13 @@ contract ECDSAVerifierV2 is SignatureVerifierV2 {
 contract ccIdentityContract {
     using RLPReader for *;
 
-    SignatureVerifierV2 internal signatureVerifier;
     EthereumDIDRegistry internal registry;
     Ethrelay internal ethrelay;
     
     struct Alias {
         string nameAlias;
         address _alias;
-        bytes _type; // todo make it array of bytes GENERALIZE
+        bytes _type;
     }
 
     // Identity struct relative to an identifier on a specific blockchain
@@ -84,19 +81,17 @@ contract ccIdentityContract {
     constructor (address registryAddress, address payable relayAddress){
         registry = EthereumDIDRegistry(registryAddress);
         ethrelay = Ethrelay(relayAddress);
-        signatureVerifier = new ECDSAVerifierV2(); // TODO GENERALIZE
     }
 
-    function declareIdentity(address identity, string memory name, Alias memory value, 
-        uint validity, 
-        bytes32 blockchainID) public returns (uint) {
+    function declareIdentity(address identity, string memory name, Alias memory value,
+        uint validity,  bytes32 blockchainID, address signatureVerifier) public returns (uint) {
         Identity memory identitycc;
 
         // 0x6469642f616c736f4b6e6f776e41730000000000000000000000000000000000 is the encoding of did/alsoKnownAs
         bytes32 hash = keccak256(abi.encodePacked(name));
         if (hash ==  keccak256(abi.encodePacked("did/alsoKnownAs"))) {// 0x6469642f616c736f4b6e6f776e41730000000000000000000000000000000000) {
 
-            identitycc.signatureVerifier = signatureVerifier;
+            identitycc.signatureVerifier = ECDSAVerifierV2(signatureVerifier);
             identitycc.identifier = value;
             identitycc.verified = false;
             identitycc.blockNumber = block.number;
@@ -111,7 +106,7 @@ contract ccIdentityContract {
 
     function verifySignature(address identifier, bytes32 blockchainID, uint8 v, bytes32 r, bytes32 s) public returns (uint) {
         Identity storage identity = ccIdentity[identifier][blockchainID];
-        if (signatureVerifier.verifySignature(identity, v, r, s) != 0)
+        if (identity.signatureVerifier.verifySignature(identity, v, r, s) != 0)
             return 1;
         
         emit VerifiedSignature(identity.identifier.nameAlias);

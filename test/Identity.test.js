@@ -20,6 +20,7 @@ const ccIdentityContract = artifacts.require('./ccIdentityContract');
 const DIDRegistry = artifacts.require('./EthereumDIDRegistry');
 const Ethrelay = artifacts.require('./Ethrelay');
 const Ethash = artifacts.require('./Ethash');
+const ECDSAVerifierV2 = artifacts.require('./ECDSAVerifierV2')
 
 const {expect} = require('chai');
 const { web3 } = require("@openzeppelin/test-helpers/src/setup");
@@ -42,6 +43,7 @@ contract('ccIdentityContract', async(accounts) => {
     let next_gas_price;
     let Verifier;
     let ethrelay;
+    let signatureVerifier;
 
     describe('Test its functionalities', function() {
         let tx = "";
@@ -69,6 +71,12 @@ contract('ccIdentityContract', async(accounts) => {
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
+
+            signatureVerifier = await ECDSAVerifierV2.new({
+                    from: accounts[0],
+                    maxFeePerGas: next_gas_price,
+                    gasPrice: GAS_PRICE_IN_WEI
+            })
 
             await time.advanceBlock();
 
@@ -191,7 +199,7 @@ contract('ccIdentityContract', async(accounts) => {
             let b32 = r[0];
             let bvalue = r[1]
 
-            let ret = await Verifier.declareIdentity(accounts[0], b32, bvalue, 100, asciiToHex(`${1337}`), {
+            let ret = await Verifier.declareIdentity(accounts[0], b32, bvalue, 100, asciiToHex(`${1337}`), signatureVerifier.address, {
                 from: accounts[0],
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
@@ -214,7 +222,7 @@ contract('ccIdentityContract', async(accounts) => {
             let b32 = r[0];
             let bvalue = r[1]
 
-            let ret = await Verifier.declareIdentity(accounts[0], b32, bvalue, 100, asciiToHex(`${1337}`), {
+            let ret = await Verifier.declareIdentity(accounts[0], b32, bvalue, 100, asciiToHex(`${1337}`), signatureVerifier.address, {
                 from: accounts[0],
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
@@ -248,7 +256,7 @@ contract('ccIdentityContract', async(accounts) => {
             let b32 = r[0];
             let bvalue = r[1]
 
-            let ret = await Verifier.declareIdentity(accounts[0], b32, bvalue, 100, asciiToHex(`${1337}`), {
+            let ret = await Verifier.declareIdentity(accounts[0], b32, bvalue, 100, asciiToHex(`${1337}`), signatureVerifier.address, {
                 from: accounts[0],
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
@@ -280,7 +288,7 @@ contract('ccIdentityContract', async(accounts) => {
             let b32 = r[0];
             let bvalue = r[1];
 
-            let ret = await Verifier.declareIdentity(accounts[0], b32, bvalue, 100, asciiToHex(`${1337}`), {
+            let ret = await Verifier.declareIdentity(accounts[0], b32, bvalue, 100, asciiToHex(`${1337}`), signatureVerifier.address, {
                 from: accounts[0],
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
