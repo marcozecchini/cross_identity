@@ -13,7 +13,7 @@ abstract contract SignatureVerifierV2 {
 }
 
 contract ECDSAVerifierV2 is SignatureVerifierV2 {
-    bytes constant SIGNATURETYPE = bytes("Secp256k1VerificationKey2018");
+    bytes constant SIGNATURETYPE = bytes("ECDSAVerificationKey");
 
     function verifySignature(ccIdentityContract.Identity memory identity, uint8 v, bytes32 r, bytes32 s) public override  returns (uint) {
         bytes32 hash = blockhash(identity.blockNumber);
@@ -75,15 +75,15 @@ contract ccIdentityContract {
 
     event IdentityDeclared(address identity, string name, Alias value, uint validity, uint blockNumber);
     event VerifiedSignature(string identifier);
-    event StateTransferred(address identity, bytes state);
+    event StateTransferred(address identity, address aliasIdentifier, bytes state);
     event IdentityDisconnected(address identity, bytes32 blockchainID);
 
     constructor (address registryAddress, address payable relayAddress){
         registry = EthereumDIDRegistry(registryAddress);
         ethrelay = Ethrelay(relayAddress);
     }
-
-    function declareIdentity(address identity, string memory name, Alias memory value,
+    //TODO ci sta bisogno di name?
+    function declareIdentity(string memory name, Alias memory value,
         uint validity,  bytes32 blockchainID, address signatureVerifier) public returns (uint) {
         Identity memory identitycc;
 
@@ -95,17 +95,18 @@ contract ccIdentityContract {
             identitycc.identifier = value;
             identitycc.verified = false;
             identitycc.blockNumber = block.number;
-            ccIdentity[identity][blockchainID] = identitycc;
-            registry.setAttribute(identity, hash, abi.encode(value), validity);
+            ccIdentity[msg.sender][blockchainID] = identitycc;
+            registry.setAttribute(msg.sender, hash, abi.encode(value), validity);
+            // registry.setAttribute(msg.sender, keccak256(abi.encodedPacked("did/)), abi.encode(value.nameAlias), validity); // TODO set properly verification method and alsoKnownAs
             
-            emit IdentityDeclared(identity, name, value, validity, block.number);
+            emit IdentityDeclared(msg.sender, name, value, validity, block.number);
             return 0;
         }
         return 1;
     }
 
-    function verifySignature(address identifier, bytes32 blockchainID, uint8 v, bytes32 r, bytes32 s) public returns (uint) {
-        Identity storage identity = ccIdentity[identifier][blockchainID];
+    function verifySignature(bytes32 blockchainID, uint8 v, bytes32 r, bytes32 s) public returns (uint) {
+        Identity storage identity = ccIdentity[msg.sender][blockchainID];
         if (identity.signatureVerifier.verifySignature(identity, v, r, s) != 0)
             return 1;
         
@@ -115,10 +116,10 @@ contract ccIdentityContract {
 
     }
 
-    function transferState(address identifier, bytes32 blockchainID, uint feeInWei, bytes memory rlpHeader, uint8 noOfConfirmations,
+    function transferState(bytes32 blockchainID, uint feeInWei, bytes memory rlpHeader, uint8 noOfConfirmations,
             PatriciaTrie memory patriciaTrie) payable public returns (uint8) {
 
-        Identity storage identity = ccIdentity[identifier][blockchainID];
+        Identity storage identity = ccIdentity[msg.sender][blockchainID];
         require(identity.verified == true, "identity not verified");
         bytes memory path = abi.encode(keccak256(abi.encodePacked(identity.identifier._alias)));
 
@@ -126,7 +127,7 @@ contract ccIdentityContract {
              return 1;
          }
         identity.state = patriciaTrie.rlpEncodedState;
-        emit StateTransferred(identifier, identity.state);
+        emit StateTransferred(msg.sender, identity.identifier._alias, identity.state);
         return 0;
     }
 
@@ -136,9 +137,11 @@ contract ccIdentityContract {
         } 
     }
 
-    function detachIdentity(address identifier, bytes32 blockchainID) public returns (uint8){
-        registry.changeOwner(identifier, identifier);
-        emit IdentityDisconnected(identifier, blockchainID);
+    function detachIdentity( bytes32 blockchainID) public returns (uint8){
+        registry.changeOwner(msg.sender, msg.sender);
+        emit IdentityDisconnected(msg.sender, blockchainID);
         return 0;
     }
+
+    // TODO add other function to interact with DID registry
 }

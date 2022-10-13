@@ -1,6 +1,6 @@
 const Web3 = require("web3");
 const Identity = require('../utils/identity');
-const { secretKey } = require( '../secrets.json');
+const { secretKey, secondarySecretKey } = require( '../secrets.json');
 
 const {BN, expectRevert, time, balance} = require('@openzeppelin/test-helpers');
 const {createRLPHeader, calculateBlockHash, addToHex, createRLPValueState, createRLPNodeEncodeState} = require('../utils/utils');
@@ -182,7 +182,7 @@ contract('ccIdentityContract', async(accounts) => {
             // console.log(contractAddress);
 
             Verifier = await ccIdentityContract.new(contractAddress, ethrelay.address, {
-                from: accounts[0],
+                from: accounts[1],
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
@@ -194,16 +194,17 @@ contract('ccIdentityContract', async(accounts) => {
             // attach identity to the smart contract through changeOwner
             let txHash = await identity.setContractOwner(Verifier.address);
 
-            let obj = ["Secp256k1VerificationKey2018", account.address];
+            let obj = ["ECDSAVerificationKey", localWeb3.eth.accounts.privateKeyToAccount(secondarySecretKey).address];
             let r = identity.createAlias("website2", "http://example.com", obj)
             let b32 = r[0];
             let bvalue = r[1]
 
-            let ret = await Verifier.declareIdentity(accounts[0], b32, bvalue, 100, asciiToHex(`${1337}`), signatureVerifier.address, {
-                from: accounts[0],
+            let ret = await Verifier.declareIdentity(b32, bvalue, 100, asciiToHex(`${1337}`), signatureVerifier.address, {
+                from: accounts[1],
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             })
+            console.log("Gas used for declare an identity: ", ret.receipt.gasUsed);
 
             // ret = await localWeb3.eth.getTransactionReceipt(ret.tx);
 
@@ -217,29 +218,30 @@ contract('ccIdentityContract', async(accounts) => {
             // attach identity to the smart contract through changeOwner
             let txHash = await identity.setContractOwner(Verifier.address);
 
-            let obj = ["Secp256k1VerificationKey2018", account.address];
+            let obj = ["ECDSAVerificationKey", localWeb3.eth.accounts.privateKeyToAccount(secondarySecretKey).address];
             let r = identity.createAlias("website2", "http://example.com", obj)
             let b32 = r[0];
             let bvalue = r[1]
 
-            let ret = await Verifier.declareIdentity(accounts[0], b32, bvalue, 100, asciiToHex(`${1337}`), signatureVerifier.address, {
-                from: accounts[0],
+            let ret = await Verifier.declareIdentity(b32, bvalue, 100, asciiToHex(`${1337}`), signatureVerifier.address, {
+                from: accounts[1],
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             })
 
             expectEvent.inLogs(ret.logs, 'IdentityDeclared');
             let blockHash = bufferToHex(keccak256(createRLPHeader(await localWeb3.eth.getBlock(ret.receipt.blockNumber))));
-            let signature = localWeb3.eth.accounts.sign(blockHash, secretKey);
+            let signature = localWeb3.eth.accounts.sign(blockHash, secondarySecretKey);
 
-            ret = await Verifier.verifySignature(accounts[0], asciiToHex(`${1337}`), 
+            ret = await Verifier.verifySignature(asciiToHex(`${1337}`),
                 signature.v,
                 signature.r,
                 signature.s, {
-                from: accounts[0],
+                from: accounts[1],
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
+            console.log("Gas used for verifying an identity: ", ret.receipt.gasUsed);
 
             expectEvent.inLogs(ret.logs, 'VerifiedSignature');
 
@@ -251,26 +253,26 @@ contract('ccIdentityContract', async(accounts) => {
             // attach identity to the smart contract through changeOwner
             let txHash = await identity.setContractOwner(Verifier.address);
 
-            let obj = ["Secp256k1VerificationKey", account.address];
+            let obj = ["ECDSAVerification", localWeb3.eth.accounts.privateKeyToAccount(secondarySecretKey).address];
             let r = identity.createAlias("website2", "http://example.com", obj)
             let b32 = r[0];
             let bvalue = r[1]
 
-            let ret = await Verifier.declareIdentity(accounts[0], b32, bvalue, 100, asciiToHex(`${1337}`), signatureVerifier.address, {
-                from: accounts[0],
+            let ret = await Verifier.declareIdentity(b32, bvalue, 100, asciiToHex(`${1337}`), signatureVerifier.address, {
+                from: accounts[1],
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
 
             expectEvent.inLogs(ret.logs, 'IdentityDeclared');
             let blockHash = (await localWeb3.eth.getBlock(ret.receipt.blockNumber)).hash;
-            let signature = localWeb3.eth.accounts.sign(blockHash, secretKey);
+            let signature = localWeb3.eth.accounts.sign(blockHash, secondarySecretKey);
 
-            await expectRevert.unspecified(Verifier.verifySignature(accounts[0], asciiToHex(`${1337}`), 
+            await expectRevert.unspecified(Verifier.verifySignature(asciiToHex(`${1337}`),
                 signature.v,
                 signature.r,
                 signature.s, {
-                from: accounts[0],
+                from: accounts[1],
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             }));
@@ -279,33 +281,33 @@ contract('ccIdentityContract', async(accounts) => {
         });
 
         it('successfully transfer an identity state in the DIDRegistry', async () => {
-            
+
             // attach identity to the smart contract through changeOwner
             let txHash = await identity.setContractOwner(Verifier.address);
 
-            let obj = ["Secp256k1VerificationKey2018", account.address];
+            let obj = ["ECDSAVerificationKey", localWeb3.eth.accounts.privateKeyToAccount(secondarySecretKey).address];
             let r = identity.createAlias("website2", "http://example.com", obj)
             let b32 = r[0];
-            let bvalue = r[1];
+            let bvalue = r[1]
 
-            let ret = await Verifier.declareIdentity(accounts[0], b32, bvalue, 100, asciiToHex(`${1337}`), signatureVerifier.address, {
-                from: accounts[0],
+            let ret = await Verifier.declareIdentity(b32, bvalue, 100, asciiToHex(`${1337}`), signatureVerifier.address, {
+                from: accounts[1],
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             })
 
             expectEvent.inLogs(ret.logs, 'IdentityDeclared');
             let blockHash = bufferToHex(keccak256(createRLPHeader(await localWeb3.eth.getBlock(ret.receipt.blockNumber))));
-            let signature = localWeb3.eth.accounts.sign(blockHash, secretKey);
+            let signature = localWeb3.eth.accounts.sign(blockHash, secondarySecretKey);
 
-            ret = await Verifier.verifySignature(accounts[0], asciiToHex(`${1337}`), 
+            ret = await Verifier.verifySignature(asciiToHex(`${1337}`),
                 signature.v,
                 signature.r,
                 signature.s, {
-                from: accounts[0],
-                maxFeePerGas: next_gas_price,
-                gasPrice: GAS_PRICE_IN_WEI
-            });
+                    from: accounts[1],
+                    maxFeePerGas: next_gas_price,
+                    gasPrice: GAS_PRICE_IN_WEI
+                });
 
             expectEvent.inLogs(ret.logs, 'VerifiedSignature');
 
@@ -314,17 +316,18 @@ contract('ccIdentityContract', async(accounts) => {
             let PatriciaTrie = {rlpEncodedState: mainWeb3.utils.toHex(value), rlpEncodedNodes: proof}
             let fee = await ethrelay.getRequiredVerificationFee();
             
-            ret = await Verifier.transferState(accounts[0], asciiToHex(`${1337}`), 
+            ret = await Verifier.transferState(asciiToHex(`${1337}`),
                 fee,
                 blockRlp,
-                3, // todo problem with confirmation blocks
+                3,
                 PatriciaTrie,
                 {
-                from: accounts[0],
+                from: accounts[1],
                 value: fee,
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
+            console.log("Gas used for transfer the state: ", ret.receipt.gasUsed);
 
             expectEvent.inLogs(ret.logs, 'StateTransferred');
 
@@ -335,9 +338,9 @@ contract('ccIdentityContract', async(accounts) => {
     });
 
     const disconnectIdentity = async (ret, Verifier) => {
-        ret = await Verifier.detachIdentity(accounts[0], asciiToHex(`${1337}`),
+        ret = await Verifier.detachIdentity(asciiToHex(`${1337}`),
             {
-                from: accounts[0],
+                from: accounts[1],
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
