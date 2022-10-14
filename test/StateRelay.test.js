@@ -8,7 +8,7 @@ const {keccak256, arrToBufArr} = require('ethereumjs-util');
 const { INFURA_TESTNET_ENDPOINT, INFURA_MAINNET_ENDPOINT } = require("../constant");
 
 const StateRelay = artifacts.require('./StateRelay');
-const EthashOwner = artifacts.require('./EthashOwner');
+const EthashOwner = artifacts.require('./Ethash');
 const {expect} = require('chai');
 const { web3 } = require("@openzeppelin/test-helpers/src/setup");
 

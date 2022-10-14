@@ -965,7 +965,7 @@ contract('MerkleRelay', async(accounts) => {
                     lengthUpdate: elements.length,
                     forkId: 0,
                     iterableIndex: 0,
-                    latestFork: "0x0000000000000000000000000000000000000000000000000000000000000000", // TODO is this correct?
+                    latestFork: "0x0000000000000000000000000000000000000000000000000000000000000000", 
                     lockedUntil: submitTime.add(LOCK_PERIOD),
                     submitter: accounts[0],
                     successors: []
@@ -1103,7 +1103,7 @@ contract('MerkleRelay', async(accounts) => {
                     lengthUpdate: elementsBis.length,
                     forkId: 0,
                     iterableIndex: 0,
-                    latestFork: "0x0000000000000000000000000000000000000000000000000000000000000000", // TODO is this correct?
+                    latestFork: "0x0000000000000000000000000000000000000000000000000000000000000000", 
                     lockedUntil: submitTime.add(LOCK_PERIOD),
                     submitter: accounts[0],
                     successors: []
@@ -1253,7 +1253,7 @@ contract('MerkleRelay', async(accounts) => {
                     lengthUpdate: elements.length,
                     forkId: 0,
                     iterableIndex: 0,
-                    latestFork: "0x0000000000000000000000000000000000000000000000000000000000000000", // TODO is this correct?
+                    latestFork: "0x0000000000000000000000000000000000000000000000000000000000000000", 
                     lockedUntil: submitTime.add(LOCK_PERIOD),
                     submitter: accounts[0],
                     successors: []
@@ -1401,7 +1401,7 @@ contract('MerkleRelay', async(accounts) => {
                     lengthUpdate: elements.length,
                     forkId: 0,
                     iterableIndex: 0,
-                    latestFork: "0x0000000000000000000000000000000000000000000000000000000000000000", // TODO is this correct?
+                    latestFork: "0x0000000000000000000000000000000000000000000000000000000000000000", 
                     lockedUntil: submitTime.add(LOCK_PERIOD),
                     submitter: accounts[0],
                     successors: []
@@ -1549,7 +1549,7 @@ contract('MerkleRelay', async(accounts) => {
                     lengthUpdate: elements.length,
                     forkId: 0,
                     iterableIndex: 0,
-                    latestFork: "0x0000000000000000000000000000000000000000000000000000000000000000", // TODO is this correct?
+                    latestFork: "0x0000000000000000000000000000000000000000000000000000000000000000", 
                     lockedUntil: submitTime.add(LOCK_PERIOD),
                     submitter: accounts[0],
                     successors: []
@@ -1721,7 +1721,7 @@ contract('MerkleRelay', async(accounts) => {
                     lengthUpdate: elementsBis.length,
                     forkId: 0,
                     iterableIndex: 0,
-                    latestFork: "0x0000000000000000000000000000000000000000000000000000000000000000", // TODO is this correct?
+                    latestFork: "0x0000000000000000000000000000000000000000000000000000000000000000", 
                     lockedUntil: submitTime.add(LOCK_PERIOD),
                     submitter: accounts[0],
                     successors: []
@@ -1817,7 +1817,7 @@ contract('MerkleRelay', async(accounts) => {
                     lengthUpdate: elements.length,
                     forkId: 0,
                     iterableIndex: 0,
-                    latestFork: "0x0000000000000000000000000000000000000000000000000000000000000000", // TODO is this correct?
+                    latestFork: "0x0000000000000000000000000000000000000000000000000000000000000000", 
                     lockedUntil: submitTime.add(LOCK_PERIOD),
                     submitter: accounts[0],
                     successors: []
@@ -1864,7 +1864,7 @@ contract('MerkleRelay', async(accounts) => {
                         lengthUpdate: elementsBis.length,
                         forkId: 0,
                         iterableIndex: 0,
-                        latestFork: "0x0000000000000000000000000000000000000000000000000000000000000000", // TODO is this correct?
+                        latestFork: "0x0000000000000000000000000000000000000000000000000000000000000000", 
                         lockedUntil: submitTime.add(LOCK_PERIOD),
                         submitter: accounts[0],
                         successors: []

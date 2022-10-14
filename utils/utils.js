@@ -32,12 +32,6 @@ const createRLPHeader = (block) => {
     ]));
 };
 
-const createRLPState = (state) => {
-    return RLP.encode([
-        // TODO
-    ]);
-};
-
 const createRLPNodeEncodeState = (proof) => {
     
     return arrToBufArr(RLP.encode(proof));
@@ -62,5 +56,4 @@ module.exports = {
     createRLPHeader,
     addToHex,
     createRLPNodeEncodeState,
-    createRLPState,
 };

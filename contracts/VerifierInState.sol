@@ -73,7 +73,7 @@ contract ccIdentityContract {
 
     mapping (address => mapping(bytes32 => Identity)) public ccIdentity;
 
-    event IdentityDeclared(address identity, string name, Alias value, uint validity, uint blockNumber);
+    event IdentityDeclared(address identity, Alias value, uint validity, uint blockNumber);
     event VerifiedSignature(string identifier);
     event StateTransferred(address identity, address aliasIdentifier, bytes state);
     event IdentityDisconnected(address identity, bytes32 blockchainID);
@@ -82,27 +82,23 @@ contract ccIdentityContract {
         registry = EthereumDIDRegistry(registryAddress);
         ethrelay = Ethrelay(relayAddress);
     }
-    //TODO ci sta bisogno di name?
-    function declareIdentity(string memory name, Alias memory value,
+
+    function declareIdentity(Alias memory value,
         uint validity,  bytes32 blockchainID, address signatureVerifier) public returns (uint) {
         Identity memory identitycc;
 
-        // 0x6469642f616c736f4b6e6f776e41730000000000000000000000000000000000 is the encoding of did/alsoKnownAs
-        bytes32 hash = keccak256(abi.encodePacked(name));
-        if (hash ==  keccak256(abi.encodePacked("did/alsoKnownAs"))) {// 0x6469642f616c736f4b6e6f776e41730000000000000000000000000000000000) {
+        identitycc.signatureVerifier = ECDSAVerifierV2(signatureVerifier);
+        identitycc.identifier = value;
+        identitycc.verified = false;
+        identitycc.blockNumber = block.number;
+        ccIdentity[msg.sender][blockchainID] = identitycc;
+        registry.setAttribute(msg.sender, keccak256(abi.encodePacked("did/alsoKnownAs")), abi.encode(value._alias), validity);
 
-            identitycc.signatureVerifier = ECDSAVerifierV2(signatureVerifier);
-            identitycc.identifier = value;
-            identitycc.verified = false;
-            identitycc.blockNumber = block.number;
-            ccIdentity[msg.sender][blockchainID] = identitycc;
-            registry.setAttribute(msg.sender, hash, abi.encode(value), validity);
-            // registry.setAttribute(msg.sender, keccak256(abi.encodedPacked("did/)), abi.encode(value.nameAlias), validity); // TODO set properly verification method and alsoKnownAs
-            
-            emit IdentityDeclared(msg.sender, name, value, validity, block.number);
-            return 0;
-        }
-        return 1;
+        // https://github.com/decentralized-identity/ethr-did-resolver/blob/master/doc/did-method-spec.md#public-keys
+        registry.setAttribute(msg.sender, keccak256(abi.encodePacked("did/pub/Secp256k1/veriKey/hex")), abi.encode(value._alias), validity);
+
+        emit IdentityDeclared(msg.sender, value, validity, block.number);
+        return 0;
     }
 
     function verifySignature(bytes32 blockchainID, uint8 v, bytes32 r, bytes32 s) public returns (uint) {
@@ -143,5 +139,32 @@ contract ccIdentityContract {
         return 0;
     }
 
-    // TODO add other function to interact with DID registry
+    // auxiliary function to invoke EthereumDIDRegistry
+    function validDelegate(address identity, bytes32 delegateType, address delegate) public view returns(bool) {
+        return registry.validDelegate(identity, delegateType, delegate);
+    }
+
+    function addDelegate(address identity, bytes32 delegateType, address delegate, uint validity) public {
+        return registry.addDelegate(identity, delegateType, delegate, validity);
+    }
+
+    function revokeDelegate(address identity, bytes32 delegateType, address delegate) public {
+        return registry.revokeDelegate(identity, delegateType, delegate);
+    }
+
+    function setAttribute(address identity, bytes32 name, bytes memory value, uint validity) public {
+        return registry.setAttribute(identity, name, value, validity);
+    }
+
+    function setAttributeSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 name, bytes memory value, uint validity) public {
+        return registry.setAttributeSigned(identity, sigV, sigR, sigS, name, value, validity);
+    }
+
+    function revokeAttribute(address identity, bytes32 name, bytes memory value) public {
+        return registry.revokeAttribute(identity, name, value);
+    }
+
+    function revokeAttributeSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 name, bytes memory value) public {
+        return registry.revokeAttributeSigned(identity, sigV, sigR, sigS, name, value);
+    }
 }
