@@ -127,14 +127,15 @@ contract('StateRelay', async(accounts) => {
 
             expect(balanceAfterCall).to.be.bignumber.equal(balanceBeforeCall.add(stake));
 
-            await staterelay.initState(accounts[0], genesisRlpHeader, mainWeb3.utils.toHex(startBalance), ethash.address, {
+            let ret = await staterelay.initState(accounts[0], genesisRlpHeader, mainWeb3.utils.toHex(startBalance), ethash.address, {
                 from: accounts[0],
                 gasPrice: GAS_PRICE_IN_WEI,
                 maxFeePerGas: next_gas_price,
 
             });
+            console.log("Gas used for init the state: ", ret.receipt.gasUsed);
 
-            await expectRevert.outOfGas(staterelay.initState(accounts[0], genesisRlpHeader, mainWeb3.utils.toHex(startBalance), ethash.address, {
+            await expectRevert.unspecified(staterelay.initState(accounts[0], genesisRlpHeader, mainWeb3.utils.toHex(startBalance), ethash.address, {
                 from: accounts[0],
                 gasPrice: GAS_PRICE_IN_WEI,
                 maxFeePerGas: next_gas_price,
@@ -200,13 +201,14 @@ contract('StateRelay', async(accounts) => {
             const intermediateBlock = createRLPHeader(await mainWeb3.eth.getBlock(GENESIS_BLOCK + 5));
             const confirmingBlock = createRLPHeader(await mainWeb3.eth.getBlock(GENESIS_BLOCK + 10));
 
-            let return_value = await staterelay.submitState(newBlock, confirmingBlock, intermediateBlock,  mainWeb3.utils.toHex(startBalance), 10, {
+            let ret = await staterelay.submitState(newBlock, confirmingBlock, intermediateBlock,  mainWeb3.utils.toHex(startBalance), 10, {
                 from: accounts[0],
                 gas:3000000,
                 gasPrice: GAS_PRICE_IN_WEI,
                 maxFeePerGas: next_gas_price,
 
             });
+            console.log("Gas used for submitting the new state (after 10 blocks): ", ret.receipt.gasUsed);
 
             // console.log((await staterelay.getIdentity(BLOCKCHAIN_ID, accounts[0])));
         });
@@ -474,7 +476,7 @@ contract('StateRelay', async(accounts) => {
 
             // the challenger ready to submit the final message to solve the dispute.
             let untrustedBlock = (await mainWeb3.eth.getBlock(parseInt(half)));
-            console.log(half, lower, GENESIS_BLOCK);
+            // console.log(half, lower, GENESIS_BLOCK);
             let pBlock = (await mainWeb3.eth.getBlock(parseInt(lower)));
             intermediateBlock = createRLPHeader(untrustedBlock);
             parentBlock = createRLPHeader(pBlock);
@@ -488,6 +490,7 @@ contract('StateRelay', async(accounts) => {
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
+            console.log("Gas used for verify the block: ", ret.receipt.gasUsed);
             
             expectEvent.inLogs(ret.logs, 'DisputeBlock', {returnCode: new BN(0)});
                                     
@@ -502,6 +505,7 @@ contract('StateRelay', async(accounts) => {
                 gasPrice: GAS_PRICE_IN_WEI
             });
 
+            console.log("Gas used for verify the state: ", ret.receipt.gasUsed);
 
             expectEvent.inLogs(ret.logs, 'DisputeWinner', {client: accounts[0], cancelledState: false});
             
@@ -532,77 +536,88 @@ contract('StateRelay', async(accounts) => {
             const state = await staterelay.getState(accounts[0]);
             expect(state).to.be.equal("0x"+startBalance.toString('hex'));
 
-            const i = 4;
+            const i = 8192*4 - 6;
             const i_c = i + 6;
             let half = i_c / 2;
             const newBlock = createRLPHeader(await mainWeb3.eth.getBlock(GENESIS_BLOCK + i));
             let intermediateBlock = createRLPHeader(await mainWeb3.eth.getBlock(GENESIS_BLOCK + half));
             const confirmingBlock = createRLPHeader(await mainWeb3.eth.getBlock(GENESIS_BLOCK + i_c));
+            let totalGasUsed = 0;
 
-            await staterelay.submitState(newBlock, confirmingBlock, intermediateBlock,  startBalance, 10, {
+            let retBis = await staterelay.submitState(newBlock, confirmingBlock, intermediateBlock,  startBalance, i_c, {
                 from: accounts[0],
                 gas:3000000,
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             });
-            
-            let intermediateHash = mainWeb3.utils.toHex(keccak256(intermediateBlock));
+            totalGasUsed += retBis.receipt.gasUsed;
 
-            await staterelay.challengerMessage(accounts[0], intermediateHash, {
+
+            let intermediateHash = mainWeb3.utils.toHex(keccak256(intermediateBlock));
+            retBis = await staterelay.challengerMessage(accounts[0], intermediateHash, {
                 from: accounts[1],
                 gas:3000000,
                 gasPrice: GAS_PRICE_IN_WEI,
                 maxFeePerGas: next_gas_price,
 
             });
-        
+            // totalGasUsed += retBis.receipt.gasUsed;
+
+
             half = (await staterelay.getIdentity(BLOCKCHAIN_ID, accounts[0])).pendingState.midBlockNumber;
             let lower = (await staterelay.getIdentity(BLOCKCHAIN_ID, accounts[0])).pendingState.lowerLimitBlock.blockNumber;
-            
+            let counter = 0;
             while (half - lower > 1) {
-                
+                counter++;
                 
                 let notEncodedBlock = await mainWeb3.eth.getBlock(parseInt(half)); // submitter retrieves the block from its chain...
                 intermediateBlock = createRLPHeader(notEncodedBlock);
 
-                await staterelay.sumbitterMessage(intermediateBlock, { // and then ... submit it
+                retBis = await staterelay.sumbitterMessage(intermediateBlock, { // and then ... submit it
                     from: accounts[0],
                     maxFeePerGas: next_gas_price,
                     gas:3000000,
                     gasPrice: GAS_PRICE_IN_WEI
                 });
-                
+                totalGasUsed += retBis.receipt.gasUsed;
+
                 // challenger retrieves its block from its chain...
                 let trustedBlock = (await mainWeb3.eth.getBlock(parseInt(half))); 
                 if (trustedBlock.hash == notEncodedBlock.hash) { // if the two blocks are the same ... 
                     // the problem should be afterwards...
                     let higherHash = (await staterelay.getIdentity(BLOCKCHAIN_ID, accounts[0])).pendingState.upperLimitBlock.hash;
-                    await staterelay.challengerMessage(accounts[0], higherHash, {
+                    retBis = await staterelay.challengerMessage(accounts[0], higherHash, {
                         from: accounts[1],
                         gas:3000000,
                         maxFeePerGas: next_gas_price,
                         gasPrice: GAS_PRICE_IN_WEI
                     });
+                    // totalGasUsed += retBis.receipt.gasUsed;
+
                 } else { // otherwise, if they differ, the problem might be before..
                     let lowerHash = (await staterelay.getIdentity(BLOCKCHAIN_ID, accounts[0])).pendingState.lowerLimitBlock.hash;
-                    await staterelay.challengerMessage(accounts[0], lowerHash, {
+                    retBis = await staterelay.challengerMessage(accounts[0], lowerHash, {
                         from: accounts[1],
                         gas:3000000,
                         maxFeePerGas: next_gas_price,
                         gasPrice: GAS_PRICE_IN_WEI
                     });
+                    // totalGasUsed += retBis.receipt.gasUsed;
                 }
                 
                 half = (await staterelay.getIdentity(BLOCKCHAIN_ID, accounts[0])).pendingState.midBlockNumber;
                 lower = (await staterelay.getIdentity(BLOCKCHAIN_ID, accounts[0])).pendingState.lowerLimitBlock.blockNumber;
                 
-            }  
-           
-                                    
+            }
+
+            console.log("Gas used by the submitter for the challenge with length ", i_c, ":", totalGasUsed);
+            console.log("COUNTER", counter);
+
             // rlp encoding of proves
             let proof = await getAccountProof(mainWeb3, accounts[0], GENESIS_BLOCK + i);
-            let proof_c = await getAccountProof(mainWeb3, accounts[0], GENESIS_BLOCK + i_c)
-            
+            let proof_c = await getAccountProof(mainWeb3, accounts[0], GENESIS_BLOCK + i_c);
+
+
             let ret = await expectRevert.unspecified(staterelay.verifyState(newBlock, proof, confirmingBlock, proof_c,  {
                 from: accounts[0],
                 gas:3000000,
@@ -781,7 +796,7 @@ contract('StateRelay', async(accounts) => {
 
             }  
             expectEvent.inLogs(ret.logs, "waitForEnd");
-            console.log(ret.logs[0].args.midBlockNumber);
+            // console.log(ret.logs[0].args.midBlockNumber);
 
             intermediateBlock = createRLPHeader(await mainWeb3.eth.getBlock(parseInt(ret.logs[0].args.midBlockNumber)));
             parentBlock = createRLPHeader(await mainWeb3.eth.getBlock(parseInt(ret.logs[0].args.midBlockNumber-1)));
@@ -808,7 +823,7 @@ contract('StateRelay', async(accounts) => {
 
     const getAccountProof = async (rpc, accountAddr, blockNumber) => {
         let proof = await rpc.eth.getProof(accountAddr, [], blockNumber);
-        console.log(proof)
+        // console.log(proof)
         return createRLPNodeEncodeState(proof.accountProof);
     }
 

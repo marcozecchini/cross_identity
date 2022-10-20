@@ -6,7 +6,6 @@ import "./MerkleRelayCore.sol";
 
 /// @title MerkleRelay: A contract enabling cross-blockchain verifications of transactions,
 ///        receipts and states on a destination blockchain of a source blockchain
-/// @author Marco Zecchini
 /// @notice You can use this contract for submitting new block headers, disputing already submitted block headers and
 ///         for verifying Merkle Patricia proofs of transactions, receipts and states
 contract MerkleRelay is MerkleRelayCore {

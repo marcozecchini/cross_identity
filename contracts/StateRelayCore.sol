@@ -9,7 +9,6 @@ abstract contract EthashInterface {
 }
 
 /// @title StateRelay: A contract enabling cross-blockchain verifications of state transfer
-/// @author Marco Zecchini
 /// @notice You can use this contract for submitting new user state along with block headers, disputing already submitted block headers and
 ///         for verifying Merkle Patricia proofs of states
 contract StateRelayCore {

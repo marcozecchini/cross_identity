@@ -205,6 +205,8 @@ contract('ccIdentityContract', async(accounts) => {
                 gasPrice: GAS_PRICE_IN_WEI
             })
             console.log("Gas used for declare an identity: ", ret.receipt.gasUsed);
+            let count = await computeZeroBytes(ret);
+            console.log("Zero bytes for this transaction are", count[0], "and the nonZero ones are", count[1]);
 
             // ret = await localWeb3.eth.getTransactionReceipt(ret.tx);
 
@@ -212,6 +214,8 @@ contract('ccIdentityContract', async(accounts) => {
 
             await disconnectIdentity(ret, Verifier);
         });
+
+
 
         it('successfully verify an identity in the DIDRegistry', async () => {
             
@@ -242,6 +246,8 @@ contract('ccIdentityContract', async(accounts) => {
                 gasPrice: GAS_PRICE_IN_WEI
             });
             console.log("Gas used for verifying an identity: ", ret.receipt.gasUsed);
+            let count = await computeZeroBytes(ret);
+            console.log("Zero bytes for this transaction are", count[0], "and the nonZero ones are", count[1]);
 
             expectEvent.inLogs(ret.logs, 'VerifiedSignature');
 
@@ -328,6 +334,8 @@ contract('ccIdentityContract', async(accounts) => {
                 gasPrice: GAS_PRICE_IN_WEI
             });
             console.log("Gas used for transfer the state: ", ret.receipt.gasUsed);
+            let count = await computeZeroBytes(ret);
+            console.log("Zero bytes for this transaction are", count[0], "and the nonZero ones are", count[1]);
 
             expectEvent.inLogs(ret.logs, 'StateTransferred');
 
@@ -336,6 +344,12 @@ contract('ccIdentityContract', async(accounts) => {
         });
 
     });
+
+     const computeZeroBytes = async (ret) => {
+        let tx = await destinationWeb3.eth.getTransaction(ret.tx);
+        let count = tx.input.split('00').length - 1;
+        return [count, tx.input.length - count];
+    }
 
     const disconnectIdentity = async (ret, Verifier) => {
         ret = await Verifier.detachIdentity(asciiToHex(`${1}`),

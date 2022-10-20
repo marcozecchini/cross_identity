@@ -5,7 +5,6 @@ import "./EthrelayCore.sol";
 import "./libraries/RLPReader.sol";
 
 /// @title Ethrelay: A contract enabling cross-blockchain verifications (transactions, receipts, states)
-/// @author Marten Sigwart, Philipp Frauenthaler, Leonhard Esterbauer, Markus Levonyak
 /// @notice You can use this contract for submitting new block headers, disputing already submitted block headers, and
 ///         for verifying Merkle Patricia proofs (transactions, receipts, states).
 /// @dev    This contract uses the EthrelayCore contract and extends it with an incentive structure.

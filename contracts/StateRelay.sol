@@ -5,7 +5,6 @@ import "./StateRelayCore.sol";
 import "./libraries/RLPReader.sol";
 
 /// @title StateRelay: A contract enabling cross-blockchain state verifications
-/// @author Marco Zecchini
 /// @notice You can use this contract for submitting new user state along with block headers, disputing already submitted block headers and
 /////         for verifying Merkle Patricia proofs of states
 /// @dev    This contract uses the StateRelayCore contract and extends it with an incentive structure.
