@@ -270,7 +270,6 @@ contract('ccIdentityContract', async(accounts) => {
                 gasPrice: GAS_PRICE_IN_WEI
             });
 
-            expectEvent.inLogs(ret.logs, 'IdentityDeclared');
             let blockHash = (await destinationWeb3.eth.getBlock(ret.receipt.blockNumber)).hash;
             let signature = destinationWeb3.eth.accounts.sign(blockHash, secondarySecretKey);
 

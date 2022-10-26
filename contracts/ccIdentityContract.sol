@@ -62,6 +62,7 @@ contract ccIdentityContract {
         Alias identifier;
         SignatureVerifierV2 signatureVerifier;
         uint blockNumber;
+        uint stateBlockNumber;
         bytes state;
         bool verified;
     }
@@ -86,19 +87,22 @@ contract ccIdentityContract {
     function declareIdentity(Alias memory value,
         uint validity,  bytes32 blockchainID, address signatureVerifier) public returns (uint) {
         Identity memory identitycc;
+        bytes32 typeOfSignature = keccak256(value._type);
+        if (keccak256(abi.encodePacked("ECDSAVerificationKey")) == typeOfSignature) {
+            identitycc.signatureVerifier = ECDSAVerifierV2(signatureVerifier);
+            identitycc.identifier = value;
+            identitycc.verified = false;
+            identitycc.blockNumber = block.number;
+            ccIdentity[msg.sender][blockchainID] = identitycc;
+            registry.setAttribute(msg.sender, keccak256(abi.encodePacked("did/alsoKnownAs")), abi.encode(value._alias), validity);
 
-        identitycc.signatureVerifier = ECDSAVerifierV2(signatureVerifier);
-        identitycc.identifier = value;
-        identitycc.verified = false;
-        identitycc.blockNumber = block.number;
-        ccIdentity[msg.sender][blockchainID] = identitycc;
-        registry.setAttribute(msg.sender, keccak256(abi.encodePacked("did/alsoKnownAs")), abi.encode(value._alias), validity);
+            // https://github.com/decentralized-identity/ethr-did-resolver/blob/master/doc/did-method-spec.md#public-keys
+            registry.setAttribute(msg.sender, keccak256(abi.encodePacked("did/pub/Secp256k1/veriKey/hex")), abi.encode(value._alias), validity);
+            emit IdentityDeclared(msg.sender, value, validity, block.number);
+            return 0;
+        }
 
-        // https://github.com/decentralized-identity/ethr-did-resolver/blob/master/doc/did-method-spec.md#public-keys
-        registry.setAttribute(msg.sender, keccak256(abi.encodePacked("did/pub/Secp256k1/veriKey/hex")), abi.encode(value._alias), validity);
-
-        emit IdentityDeclared(msg.sender, value, validity, block.number);
-        return 0;
+        return 1;
     }
 
     function verifySignature(bytes32 blockchainID, uint8 v, bytes32 r, bytes32 s) public returns (uint) {
@@ -123,6 +127,8 @@ contract ccIdentityContract {
              return 1;
          }
         identity.state = patriciaTrie.rlpEncodedState;
+        identity.stateBlockNumber = block.number;
+        // TODO aggiungi numero blocco per stato;
         emit StateTransferred(msg.sender, identity.identifier._alias, identity.state);
         return 0;
     }
