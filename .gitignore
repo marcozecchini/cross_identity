@@ -9,4 +9,5 @@ EthereumProof/
 src/
 network/
 .idea/
+build/
 secret.secret

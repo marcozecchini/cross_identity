@@ -20,7 +20,7 @@ const ccIdentityContract = artifacts.require('./ccIdentityContract');
 const DIDRegistry = artifacts.require('./EthereumDIDRegistry');
 const Ethrelay = artifacts.require('./Ethrelay');
 const Ethash = artifacts.require('./Ethash');
-const ECDSAVerifierV2 = artifacts.require('./ECDSAVerifierV2')
+const ECDSAVerifierV2 = artifacts.require('./ECDSAVerifierV2');
 
 const {expect} = require('chai');
 const { web3 } = require("@openzeppelin/test-helpers/src/setup");
