@@ -1,4 +1,4 @@
-# Building a Cross-Chain Identity for Cross-Chain Applications: a Self-Sovereign Identity-based Framework
+# Building a Cross-Chain Identity: a Self-Sovereign Identity-based Framework
 
 Prototypical implementation of the smart contracts and a Javascript library for the realization of a Cross-Chain Identity Framework.
 The prototype is Proof-of-Concept, and it allows to bind identities belonging to different Ethereum-based blockchains in compliance with W3C [Decentralized Identifier](https://w3c.github.io/did-core/) standard.
