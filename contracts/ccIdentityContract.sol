@@ -97,7 +97,7 @@ contract ccIdentityContract {
             registry.setAttribute(msg.sender, keccak256(abi.encodePacked("did/alsoKnownAs")), abi.encode(value._alias), validity);
 
             // https://github.com/decentralized-identity/ethr-did-resolver/blob/master/doc/did-method-spec.md#public-keys
-            registry.setAttribute(msg.sender, keccak256(abi.encodePacked("did/pub/Secp256k1/veriKey/hex")), abi.encode(value._alias), validity);
+            registry.setAttribute(msg.sender, keccak256(abi.encodePacked("did/verificationRelationship/authentication")), abi.encode(value._alias), validity);
             emit IdentityDeclared(msg.sender, value, validity, block.number);
             return 0;
         }
