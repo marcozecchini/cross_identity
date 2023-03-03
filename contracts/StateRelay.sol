@@ -106,7 +106,7 @@ contract StateRelay is StateRelayCore {
         require(getStake() >= REQUIRED_STAKE_PER_STATE, "provided fee is less than expected fee");
         
         // client has enough stake -> submit header and add its hash to the client's list of submitted block headers
-        return _submitState(BLOCKCHAIN_ID, msg.sender, rlpHeader, rlpConfirmingHeader, rlpIntermediateHeader, stateContent, lengthUpdate);
+        return _submitState(BLOCKCHAIN_ID, tx.origin, rlpHeader, rlpConfirmingHeader, rlpIntermediateHeader, stateContent, lengthUpdate);
 
     }
 
@@ -156,7 +156,7 @@ contract StateRelay is StateRelayCore {
         require(getIdentityAddress(BLOCKCHAIN_ID, msg.sender) == msg.sender, "user not enabled to answer");
         require(getStake() >= REQUIRED_STAKE_PER_STATE, "provided fee is less than expected fee");
         require(gotoState, "verify the block before");
-        bytes memory path = abi.encode(keccak256(abi.encodePacked(msg.sender)));
+        bytes memory path = abi.encode(keccak256(abi.encodePacked(tx.origin)));
 
         bytes memory stateContent = pendingState.pendingState.stateContent;
 

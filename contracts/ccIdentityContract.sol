@@ -4,12 +4,12 @@ pragma solidity >=0.8.4 <0.9.0;
 import "./libraries/MerklePatriciaProof.sol";
 import "./libraries/RLPReader.sol";
 import "./EthereumDIDRegistry.sol";
-import "./Ethrelay.sol";
+import "./StateRelay.sol";
 
 abstract contract SignatureVerifierV2 {
-    function verifySignature(ccIdentityContract.Identity memory identity, 
+    function verifySignature(ccIdentityContract.Identity memory identity,
         uint8 v, bytes32 r, bytes32 s) virtual public  returns (uint);
-    
+
 }
 
 contract ECDSAVerifierV2 is SignatureVerifierV2 {
@@ -31,7 +31,7 @@ contract ECDSAVerifierV2 is SignatureVerifierV2 {
 
         require(signer != address(0), "ECDSA: invalid signature");
         if (signer != identity.identifier._alias) return 1;
-        
+
         return 0;
 
     }
@@ -42,15 +42,15 @@ contract ECDSAVerifierV2 is SignatureVerifierV2 {
         }
     }
 
-    
+
 }
 
 contract ccIdentityContract {
     using RLPReader for *;
 
     EthereumDIDRegistry internal registry;
-    Ethrelay internal ethrelay;
-    
+    StateRelay internal staterelay;
+
     struct Alias {
         string nameAlias;
         address _alias;
@@ -81,7 +81,7 @@ contract ccIdentityContract {
 
     constructor (address registryAddress, address payable relayAddress){
         registry = EthereumDIDRegistry(registryAddress);
-        ethrelay = Ethrelay(relayAddress);
+        staterelay = StateRelay(relayAddress);
     }
 
     function declareIdentity(Alias memory value,
@@ -109,26 +109,26 @@ contract ccIdentityContract {
         Identity storage identity = ccIdentity[msg.sender][blockchainID];
         if (identity.signatureVerifier.verifySignature(identity, v, r, s) != 0)
             return 1;
-        
+
         emit VerifiedSignature(identity.identifier.nameAlias);
         identity.verified = true;
         return 0;
 
     }
 
-    function transferState(bytes32 blockchainID, uint feeInWei, bytes memory rlpHeader, uint8 noOfConfirmations,
-            PatriciaTrie memory patriciaTrie) payable public returns (uint8) {
+    function transferState(bytes32 blockchainID, bytes memory rlpHeader, bytes memory rlpHeaderConfirming,
+        bytes memory rlpIntermediateHeader, bytes memory stateContent, uint lengthUpdate) payable public returns (uint8) {
 
         Identity storage identity = ccIdentity[msg.sender][blockchainID];
         require(identity.verified == true, "identity not verified");
         bytes memory path = abi.encode(keccak256(abi.encodePacked(identity.identifier._alias)));
 
-         if (ethrelay.verifyState{value: msg.value}(feeInWei, rlpHeader, noOfConfirmations, patriciaTrie.rlpEncodedState, path, patriciaTrie.rlpEncodedNodes) > 0) {
-             return 1;
-         }
-        identity.state = patriciaTrie.rlpEncodedState;
+        if (staterelay.submitState(rlpHeader, rlpHeaderConfirming, rlpIntermediateHeader, stateContent, lengthUpdate) != 0) {
+            return 1;
+        }
+
+        identity.state = stateContent;
         identity.stateBlockNumber = block.number;
-        // TODO aggiungi numero blocco per stato;
         emit StateTransferred(msg.sender, identity.identifier._alias, identity.state);
         return 0;
     }
@@ -136,7 +136,7 @@ contract ccIdentityContract {
     function bytesToAddress(bytes memory bys) private pure returns (address addr) {
         assembly {
             addr := mload(add(bys,32))
-        } 
+        }
     }
 
     function detachIdentity( bytes32 blockchainID) public returns (uint8){

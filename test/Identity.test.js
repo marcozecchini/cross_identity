@@ -19,11 +19,13 @@ const { INFURA_TESTNET_ENDPOINT, INFURA_MAINNET_ENDPOINT } = require("../constan
 const ccIdentityContract = artifacts.require('./ccIdentityContract');
 const DIDRegistry = artifacts.require('./EthereumDIDRegistry');
 const Ethrelay = artifacts.require('./Ethrelay');
+const StateRelay = artifacts.require('./StateRelay');
 const Ethash = artifacts.require('./Ethash');
 const ECDSAVerifierV2 = artifacts.require('./ECDSAVerifierV2');
 
 const {expect} = require('chai');
 const { web3 } = require("@openzeppelin/test-helpers/src/setup");
+const epochData = require("./pow/epochMine.json");
 
 const ZERO_HASH                 = '0x0000000000000000000000000000000000000000000000000000000000000000';
 const LOCK_PERIOD               = time.duration.minutes(5);
@@ -70,6 +72,12 @@ contract('ccIdentityContract', async(accounts) => {
                 from: accounts[0],
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
+            });
+
+            staterelay = await StateRelay.new({
+                from: accounts[0],
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
             });
 
             signatureVerifier = await ECDSAVerifierV2.new({
@@ -287,6 +295,27 @@ contract('ccIdentityContract', async(accounts) => {
 
         it('successfully transfer an identity state in the DIDRegistry', async () => {
 
+            const genesisBlock = await mainWeb3.eth.getBlock(GENESIS_BLOCK);
+            const stake = new BN(1000000001);
+            const balanceBeforeCall = await staterelay.getStake({from: accounts[0]});
+
+            const startBalance = await mainWeb3.eth.getBalance(accounts[0]);//, GENESIS_BLOCK);
+            const genesisRlpHeader = createRLPHeader(genesisBlock);
+
+            await staterelay.depositStake(stake, {from: accounts[0], value: stake, maxFeePerGas: next_gas_price});
+            const balanceAfterCall = await staterelay.getStake({from: accounts[0]});
+
+            expect(balanceAfterCall).to.be.bignumber.equal(balanceBeforeCall.add(stake));
+
+            await staterelay.initState(accounts[0], genesisRlpHeader, mainWeb3.utils.toHex(startBalance), ethash.address, {
+                from: accounts[0],
+                gasPrice: GAS_PRICE_IN_WEI,
+                maxFeePerGas: next_gas_price,
+            });
+
+            const state = mainWeb3.utils.hexToNumberString(await staterelay.getState(accounts[0]));
+            expect(state).to.be.bignumber.equal(startBalance);
+
             // attach identity to the smart contract through changeOwner
             let txHash = await identity.setContractOwner(Verifier.address);
 
@@ -295,7 +324,7 @@ contract('ccIdentityContract', async(accounts) => {
             let b32 = r[0];
             let bvalue = r[1]
 
-            let ret = await Verifier.declareIdentity(bvalue, 100, asciiToHex(`${1}`), signatureVerifier.address, {
+            let ret = await Verifier.declareIdentity(bvalue, 100, asciiToHex(`${4}`), signatureVerifier.address, {
                 from: accounts[1],
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
@@ -305,7 +334,7 @@ contract('ccIdentityContract', async(accounts) => {
             let blockHash = bufferToHex(keccak256(createRLPHeader(await destinationWeb3.eth.getBlock(ret.receipt.blockNumber))));
             let signature = destinationWeb3.eth.accounts.sign(blockHash, secondarySecretKey);
 
-            ret = await Verifier.verifySignature(asciiToHex(`${1}`),
+            ret = await Verifier.verifySignature(asciiToHex(`${4}`),
                 signature.v,
                 signature.r,
                 signature.s, {
@@ -316,23 +345,24 @@ contract('ccIdentityContract', async(accounts) => {
 
             expectEvent.inLogs(ret.logs, 'VerifiedSignature');
 
-            let proof = await getAccountProof(mainWeb3, accounts[0], GENESIS_BLOCK + 1);
-            let value = await getAccountState(mainWeb3, accounts[0], GENESIS_BLOCK + 1);
-            let PatriciaTrie = {rlpEncodedState: mainWeb3.utils.toHex(value), rlpEncodedNodes: proof}
-            let fee = await ethrelay.getRequiredVerificationFee();
-            
-            ret = await Verifier.transferState(asciiToHex(`${1}`),
-                fee,
-                blockRlp,
-                3,
-                PatriciaTrie,
+            const newBlock = createRLPHeader(await mainWeb3.eth.getBlock(GENESIS_BLOCK + 4));
+            const intermediateBlock = createRLPHeader(await mainWeb3.eth.getBlock(GENESIS_BLOCK + 5));
+            const confirmingBlock = createRLPHeader(await mainWeb3.eth.getBlock(GENESIS_BLOCK + 10));
+
+            ret = await Verifier.transferState(asciiToHex(`${4}`),
+                newBlock,
+                confirmingBlock,
+                intermediateBlock,
+                mainWeb3.utils.toHex(startBalance),
+                10,
                 {
                 from: accounts[1],
-                value: fee,
+                gas:3000000,
+                gasPrice: GAS_PRICE_IN_WEI,
                 maxFeePerGas: next_gas_price,
-                gasPrice: GAS_PRICE_IN_WEI
+
             });
-            console.log("Gas used for transfer the state: ", ret.receipt.gasUsed);
+            console.log("Gas used for submitting the new state (after 10 blocks): ", ret.receipt.gasUsed);
             let count = await computeZeroBytes(ret);
             console.log("Zero bytes for this transaction are", count[0], "and the nonZero ones are", count[1]);
 
