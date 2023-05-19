@@ -112,7 +112,7 @@ contract StateRelayCore {
     // values represent a valid block of the tracked blockchain
 
     function _initState(bytes32 blockchainID, address identifier, bytes memory _rlpHeader, bytes memory _state, address _ethashContractAddr) internal {
-        require(identifier == msg.sender, "not the same identity");
+        // require(identifier == tx.origin, "not the same identity");
         require(!getIdentity(blockchainID, identifier).verified, "identity is already initialized");
         
         bytes32 newBlockHash = keccak256(_rlpHeader);
@@ -129,7 +129,7 @@ contract StateRelayCore {
         newHeader.stateRoot = parsedHeader.stateRoot;
 
         identity.blockchainId = blockchainID;
-        identity.identifier = msg.sender; 
+        identity.identifier = tx.origin; 
         identity.verified = true;
         identity.ethashContract = EthashInterface(_ethashContractAddr);
 
@@ -208,10 +208,9 @@ contract StateRelayCore {
         bytes32 blockHash = keccak256(_rlpNBlockHeader);
         
         // check if header has not been submitted before
-        require(getIdentityAddress(blockchainID, identifier) == msg.sender, "identity not initialized");
-        require(!isLastHeaderStored(blockchainID, identifier, blockHash), "block already exists");
+        // require(getIdentityAddress(blockchainID, identifier) == tx.origin, "identity not initialized"); // TODO Fix
+        require(!isLastHeaderStored(blockchainID, identifier, blockHash), "block already exists"); 
         require(isPendingUnlocked(blockchainID, identifier), "dispute period is not expired");
-        require(getIdentity(blockchainID, identifier).identifier == msg.sender, "not valid identity");
 
         newHeader = fromRlpEncodedToHeader(_rlpNBlockHeader);
 
@@ -255,7 +254,7 @@ contract StateRelayCore {
         }
         require(block.timestamp <= pendingState.lockedUntil, "too late for dispute");
         require(pendingState.midBlockNumber > 1, "already reached a single block");
-        require(pendingState.challenger == msg.sender || pendingState.challenger == address(0), "challenger not allowed");
+        require(pendingState.challenger == tx.origin || pendingState.challenger == address(0), "challenger not allowed");
         require(!sameHeader(pendingState.lowerLimitBlock, pendingState.intermediateBlock) || !sameHeader(pendingState.upperLimitBlock, pendingState.intermediateBlock), "sumbitter didn't answer");
 
         if (pendingState.upperLimitBlock.hash == upperLimitBlockHash) { // If you want to know more in the second interval
@@ -269,7 +268,7 @@ contract StateRelayCore {
 
         pendingState.midBlockNumber = ((pendingState.upperLimitBlock.blockNumber - pendingState.lowerLimitBlock.blockNumber) / 2) + pendingState.lowerLimitBlock.blockNumber;
         pendingState.answerBefore = ANSWER_PERIOD_IN_MIN + block.timestamp;
-        pendingState.challenger = msg.sender;
+        pendingState.challenger = tx.origin;
         identity.pendingState = pendingState;
         ccIdentity[blockchainID][identifier] = identity;
         if ((pendingState.midBlockNumber == pendingState.lowerLimitBlock.blockNumber + 1)) {
@@ -289,7 +288,7 @@ contract StateRelayCore {
         PendingState memory pendingState = identity.pendingState;
         require(block.timestamp <= pendingState.lockedUntil, "too late for dispute");
         require(block.timestamp <= pendingState.answerBefore, "too late for answering");
-        require(pendingState.identifier == msg.sender, "submitter not allowed");
+        require(pendingState.identifier == tx.origin, "submitter not allowed");
         require(pendingState.midBlockNumber > 1, "already reached a single block");
         require(!sameHeader(pendingState.lowerLimitBlock, pendingState.intermediateBlock) || !sameHeader(pendingState.upperLimitBlock,pendingState.intermediateBlock), "sumbitter didn't answer");
 

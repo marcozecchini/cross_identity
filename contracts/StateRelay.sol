@@ -26,7 +26,7 @@ contract StateRelay is StateRelayCore {
     constructor() StateRelayCore() {}
 
     function initState(address identifier, bytes memory _rlpHeader, bytes memory _state, address _ethashContractAddr) public {
-        // require(getStake(msg.sender) >= REQUIRED_STAKE_PER_STATE, "provided fee is less than expected fee"); // TODO it always revert...
+        // require(getStake(tx.origin) >= REQUIRED_STAKE_PER_STATE, "provided fee is less than expected fee"); // TODO it always revert...
         _initState(BLOCKCHAIN_ID, identifier, _rlpHeader, _state, _ethashContractAddr);
     }
     
@@ -36,7 +36,7 @@ contract StateRelay is StateRelayCore {
     /// @dev Deposits stake for a client allowing the client to submit block headers.
     function depositStake(uint amount) public payable {
         require(amount == msg.value, "transfer amount not equal to function parameter");
-        clientStake[msg.sender] = clientStake[msg.sender] + msg.value;
+        clientStake[tx.origin] = clientStake[tx.origin] + msg.value;
     }
 
     event WithdrawStake(address client, uint withdrawnStake);
@@ -44,49 +44,49 @@ contract StateRelay is StateRelayCore {
     ///      containing the client's address and the amount of withdrawn stake.
     function withdrawStake(uint amount) public {
         // if participant has not emitted amount stake we can for sure revert
-        require(clientStake[msg.sender] >= amount, "amount higher than deposited stake");
+        require(clientStake[tx.origin] >= amount, "amount higher than deposited stake");
 
         // else we check the unlocked stake and if enough stake is available we simply withdraw amount
-        if (getUnusedStake(msg.sender) >= amount) {
-            withdraw(payable(msg.sender), amount);
-            emit WithdrawStake(msg.sender, amount);
+        if (getUnusedStake(tx.origin) >= amount) {
+            withdraw(payable(tx.origin), amount);
+            emit WithdrawStake(tx.origin, amount);
             return;
         }
 
         // no enough free stake -> try to clean up array (search for stakes used by blocks that have already passed the lock period)
-        cleanSubmitList(msg.sender);
+        cleanSubmitList(tx.origin);
 
         // if less than amount is available, we simply withdraw 0, so the client can distinguish
         // between the case a participant doesn't event hold amount stake or it is simply locked
-        if (getUnusedStake(msg.sender) >= amount) {
-            withdraw(payable(msg.sender), amount);
-            emit WithdrawStake(msg.sender, amount);
+        if (getUnusedStake(tx.origin) >= amount) {
+            withdraw(payable(tx.origin), amount);
+            emit WithdrawStake(tx.origin, amount);
             return;
         }
 
-        if (challenger == msg.sender) {
+        if (challenger == tx.origin) {
             return;
         }
 
-        emit WithdrawStake(msg.sender, 0);
+        emit WithdrawStake(tx.origin, 0);
     }
 
     function withdrawTimeout() public {
         bool result;
         uint who;
-        (result, who) = isTimeout(BLOCKCHAIN_ID, msg.sender);
+        (result, who) = isTimeout(BLOCKCHAIN_ID, tx.origin);
         if (result) {
             if (who==2) {
                 clientStake[challenger] += REQUIRED_STAKE_PER_STATE;
             } else {
-                clientStake[getIdentityAddress(BLOCKCHAIN_ID, msg.sender)] += REQUIRED_STAKE_PER_CHALLENGE;
+                clientStake[getIdentityAddress(BLOCKCHAIN_ID, tx.origin)] += REQUIRED_STAKE_PER_CHALLENGE;
             }
             challenger = address(0);
         }
     }
     
     function getStake() public view returns (uint) {
-        return clientStake[msg.sender];
+        return clientStake[tx.origin];
     }
 
     function getRequiredStakePerState() public pure returns (uint) {
@@ -98,7 +98,7 @@ contract StateRelay is StateRelayCore {
     }
 
     function getNumberOfStateSubmittedByClient() public view returns (uint) {
-        return NumberOfStateSubmittedByClient[msg.sender];
+        return NumberOfStateSubmittedByClient[tx.origin];
     }
 
     function submitState(bytes memory rlpHeader, bytes memory rlpConfirmingHeader, bytes memory rlpIntermediateHeader, bytes memory stateContent, uint lengthUpdate) public returns (uint){
@@ -112,29 +112,29 @@ contract StateRelay is StateRelayCore {
 
     function challengerMessage(address submitter, bytes32 upperLimitBlockHash) public returns (bool) {
         require(getStake() >= REQUIRED_STAKE_PER_CHALLENGE, "provided fee is less than expected fee");
-        if (msg.sender == challenger || challenger == address(0)) {
-            challenger = msg.sender;
+        if (tx.origin == challenger || challenger == address(0)) {
+            challenger = tx.origin;
             return _challengerMessage(BLOCKCHAIN_ID, submitter, upperLimitBlockHash);
         }
         return false;
     }
 
     function sumbitterMessage(bytes memory _rlpIntermediateBlockHeader) public returns (bool) {
-        require(getIdentityAddress(BLOCKCHAIN_ID, msg.sender) == msg.sender, "user not enabled to answer");
+        require(getIdentityAddress(BLOCKCHAIN_ID, tx.origin) == tx.origin, "user not enabled to answer");
         require(getStake() >= REQUIRED_STAKE_PER_STATE, "provided fee is less than expected fee");
 
-        return _sumbitterMessage(BLOCKCHAIN_ID, msg.sender, _rlpIntermediateBlockHeader);
+        return _sumbitterMessage(BLOCKCHAIN_ID, tx.origin, _rlpIntermediateBlockHeader);
     }
 
 
     event DisputeWinner(address client, bool cancelledState);
     /// @dev Function that ends the dispute among the submitter and the challenger
     function verifyBlock(bytes calldata rlpHeader, bytes memory rlpParent, uint[] memory dataSetLookup, uint[] memory witnessForLookup) public {
-        require(getIdentityAddress(BLOCKCHAIN_ID, msg.sender) == msg.sender, "user not enabled to answer");
+        require(getIdentityAddress(BLOCKCHAIN_ID, tx.origin) == tx.origin, "user not enabled to answer");
         require(getStake() >= REQUIRED_STAKE_PER_STATE, "provided fee is less than expected fee");
         require(!gotoState, "no call it again");
         
-        if (disputeBlock(BLOCKCHAIN_ID, msg.sender, rlpHeader, rlpParent, dataSetLookup, witnessForLookup) != 0) {
+        if (disputeBlock(BLOCKCHAIN_ID, tx.origin, rlpHeader, rlpParent, dataSetLookup, witnessForLookup) != 0) {
             clientStake[challenger] += REQUIRED_STAKE_PER_STATE;
             emit DisputeWinner(challenger, true);
             return;
@@ -149,11 +149,11 @@ contract StateRelay is StateRelayCore {
         bytes32 blockHashConfirming = keccak256(rlpHeaderConfirming);
         bytes32 merkleRootHashN = getStateRoot(rlpHeaderN);
         bytes32 merkleRootHashConfirming = getStateRoot(rlpHeaderConfirming);
-        PendingState memory pendingState = getIdentity(BLOCKCHAIN_ID, msg.sender).pendingState;
+        PendingState memory pendingState = getIdentity(BLOCKCHAIN_ID, tx.origin).pendingState;
         
-        require(getPendingHash(BLOCKCHAIN_ID, msg.sender) == blockHashN, "hashN provided is not valid");
-        require(getConfirmingHash(BLOCKCHAIN_ID, msg.sender) == blockHashConfirming, "hashConf provided is not valid");
-        require(getIdentityAddress(BLOCKCHAIN_ID, msg.sender) == msg.sender, "user not enabled to answer");
+        require(getPendingHash(BLOCKCHAIN_ID, tx.origin) == blockHashN, "hashN provided is not valid");
+        require(getConfirmingHash(BLOCKCHAIN_ID, tx.origin) == blockHashConfirming, "hashConf provided is not valid");
+        require(getIdentityAddress(BLOCKCHAIN_ID, tx.origin) == tx.origin, "user not enabled to answer");
         require(getStake() >= REQUIRED_STAKE_PER_STATE, "provided fee is less than expected fee");
         require(gotoState, "verify the block before");
         bytes memory path = abi.encode(keccak256(abi.encodePacked(tx.origin)));
@@ -167,14 +167,11 @@ contract StateRelay is StateRelayCore {
             return;
         }
 
-        clientStake[msg.sender] += REQUIRED_STAKE_PER_CHALLENGE;
+        clientStake[tx.origin] += REQUIRED_STAKE_PER_CHALLENGE;
         challenger = address(0);
         gotoState = false;
-        emit DisputeWinner(msg.sender, false);
+        emit DisputeWinner(tx.origin, false);
     }
-
-    
-
 
     /// @dev Calculates the stake needed by a client
     function getStake(address client) private view returns (uint) {

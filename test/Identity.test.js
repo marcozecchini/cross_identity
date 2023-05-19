@@ -18,7 +18,6 @@ const { INFURA_TESTNET_ENDPOINT, INFURA_MAINNET_ENDPOINT } = require("../constan
 
 const ccIdentityContract = artifacts.require('./ccIdentityContract');
 const DIDRegistry = artifacts.require('./EthereumDIDRegistry');
-const Ethrelay = artifacts.require('./Ethrelay');
 const StateRelay = artifacts.require('./StateRelay');
 const Ethash = artifacts.require('./Ethash');
 const ECDSAVerifierV2 = artifacts.require('./ECDSAVerifierV2');
@@ -44,7 +43,7 @@ contract('ccIdentityContract', async(accounts) => {
     let destinationWeb3;
     let next_gas_price;
     let Verifier;
-    let ethrelay;
+    let staterelay;
     let signatureVerifier;
 
     describe('Test its functionalities', function() {
@@ -68,11 +67,6 @@ contract('ccIdentityContract', async(accounts) => {
 
             const genesisBlock = await mainWeb3.eth.getBlock(GENESIS_BLOCK);
             const genesisRlpHeader = createRLPHeader(genesisBlock);
-            ethrelay = await Ethrelay.new(genesisRlpHeader, genesisBlock.totalDifficulty, ethash.address, {
-                from: accounts[0],
-                maxFeePerGas: next_gas_price,
-                gasPrice: GAS_PRICE_IN_WEI
-            });
 
             staterelay = await StateRelay.new({
                 from: accounts[0],
@@ -88,97 +82,16 @@ contract('ccIdentityContract', async(accounts) => {
 
             await time.advanceBlock();
 
-            const requiredStakePerBlock = await ethrelay.getRequiredStakePerBlock();
-            const stake = requiredStakePerBlock.mul(new BN(4));
-            let ret = await ethrelay.depositStake(stake, {
-                from: accounts[0],
-                value: stake,
-                maxFeePerGas: next_gas_price,
-                gasPrice: GAS_PRICE_IN_WEI
-            });
+            const requiredStakePerBlock = await staterelay.getRequiredStakePerState();
+            const stake = requiredStakePerBlock.mul(new BN(1));
+            
+            // let ret = await staterelay.depositStake(stake, {
+            //     from: accounts[1],
+            //     value: stake,
+            //     maxFeePerGas: next_gas_price,
+            //     gasPrice: GAS_PRICE_IN_WEI
+            // });
 
-            let block1 = await mainWeb3.eth.getBlock(GENESIS_BLOCK + 1);
-            block1.parentHash = bufferToHex(keccak256(genesisRlpHeader));
-            blockRlp = createRLPHeader(block1);
-            let block2 = await mainWeb3.eth.getBlock(GENESIS_BLOCK + 2);
-            block2.parentHash = bufferToHex(keccak256(blockRlp));
-            blockRlp = createRLPHeader(block2);
-            let block3 = await mainWeb3.eth.getBlock(GENESIS_BLOCK + 3);
-            block3.parentHash = bufferToHex(keccak256(blockRlp));
-            blockRlp = createRLPHeader(block3);
-            let block4 = await mainWeb3.eth.getBlock(GENESIS_BLOCK + 4);
-            block4.parentHash = bufferToHex(keccak256(blockRlp));
-            let block5 = await mainWeb3.eth.getBlock(GENESIS_BLOCK + 5);
-            block5.parentHash = bufferToHex(keccak256(blockRlp));
-            blockRlp = createRLPHeader(block5);
-            let block6 = await mainWeb3.eth.getBlock(GENESIS_BLOCK + 6);
-            block6.parentHash = bufferToHex(keccak256(blockRlp));
-            blockRlp = createRLPHeader(block6);
-            let block7 = await mainWeb3.eth.getBlock(GENESIS_BLOCK + 7);
-            block7.parentHash = bufferToHex(keccak256(blockRlp));
-            blockRlp = createRLPHeader(block7);
-
-            blockRlp = createRLPHeader(block1);
-
-            const expectedBlocks = [
-                {
-                    block: block1,
-                    forkId: 0,
-                    iterableIndex: 0,
-                    latestFork: block1.parentHash,
-                    successors: [block2.hash],
-                    submitter: accounts[0]
-                },
-                {
-                    block: block2,
-                    forkId: 0,
-                    iterableIndex: 0,
-                    latestFork: block1.parentHash,
-                    successors: [block3.hash],
-                    submitter: accounts[0]
-                },
-                {
-                    block: block3,
-                    forkId: 0,
-                    iterableIndex: 0,
-                    latestFork: block1.parentHash,
-                    successors: [block4.hash],
-                    submitter: accounts[0]
-                },
-                {
-                    block: block4,
-                    forkId: 0,
-                    iterableIndex: 0,
-                    latestFork: block1.parentHash,
-                    successors: [],
-                    submitter: accounts[0]
-                },
-                {
-                    block: block5,
-                    forkId: 0,
-                    iterableIndex: 0,
-                    latestFork: block1.parentHash,
-                    successors: [],
-                    submitter: accounts[0]
-                },
-                {
-                    block: block6,
-                    forkId: 0,
-                    iterableIndex: 0,
-                    latestFork: block1.parentHash,
-                    successors: [],
-                    submitter: accounts[0]
-                },
-                {
-                    block: block7,
-                    forkId: 0,
-                    iterableIndex: 0,
-                    latestFork: block1.parentHash,
-                    successors: [],
-                    submitter: accounts[0]
-                },
-            ];
-            await submitBlockHeaders(expectedBlocks, accounts[0]);
 
         });
     
@@ -189,7 +102,7 @@ contract('ccIdentityContract', async(accounts) => {
             contractAddress = await identity.initRegistry(DIDRegistry.abi, DIDRegistry.bytecode);
             // console.log(contractAddress);
 
-            Verifier = await ccIdentityContract.new(contractAddress, ethrelay.address, {
+            Verifier = await ccIdentityContract.new(contractAddress, staterelay.address, {
                 from: accounts[1],
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
@@ -302,13 +215,13 @@ contract('ccIdentityContract', async(accounts) => {
             const startBalance = await mainWeb3.eth.getBalance(accounts[0]);//, GENESIS_BLOCK);
             const genesisRlpHeader = createRLPHeader(genesisBlock);
 
-            await staterelay.depositStake(stake, {from: accounts[0], value: stake, maxFeePerGas: next_gas_price});
-            const balanceAfterCall = await staterelay.getStake({from: accounts[0]});
+            await staterelay.depositStake(stake, {from: accounts[1], value: stake, maxFeePerGas: next_gas_price});
+            const balanceAfterCall = await staterelay.getStake({from: accounts[1]});
 
             expect(balanceAfterCall).to.be.bignumber.equal(balanceBeforeCall.add(stake));
 
             await staterelay.initState(accounts[0], genesisRlpHeader, mainWeb3.utils.toHex(startBalance), ethash.address, {
-                from: accounts[0],
+                from: accounts[1],
                 gasPrice: GAS_PRICE_IN_WEI,
                 maxFeePerGas: next_gas_price,
             });
@@ -329,7 +242,7 @@ contract('ccIdentityContract', async(accounts) => {
                 maxFeePerGas: next_gas_price,
                 gasPrice: GAS_PRICE_IN_WEI
             })
-
+            
             expectEvent.inLogs(ret.logs, 'IdentityDeclared');
             let blockHash = bufferToHex(keccak256(createRLPHeader(await destinationWeb3.eth.getBlock(ret.receipt.blockNumber))));
             let signature = destinationWeb3.eth.accounts.sign(blockHash, secondarySecretKey);
@@ -446,15 +359,15 @@ contract('ccIdentityContract', async(accounts) => {
         return (proof.accountProof)[proof.accountProof.length-1],createRLPNodeEncodeState(proof.accountProof);
     }
 
-    const submitBlockHeaders = async (expectedHeaders, accountAddr) => {
-        await asyncForEach(expectedHeaders, async expected => {
-            const rlpHeader = createRLPHeader(expected.block);
-            await time.increase(time.duration.seconds(15));
-            await ethrelay.submitBlock(rlpHeader, {from: accountAddr, maxFeePerGas: next_gas_price, gasPrice: GAS_PRICE_IN_WEI});
-            const submitTime = await time.latest();
-            expected.lockedUntil = submitTime.add(LOCK_PERIOD);
-        });
-    };
+    // const submitBlockHeaders = async (expectedHeaders, accountAddr) => {
+    //     await asyncForEach(expectedHeaders, async expected => {
+    //         const rlpHeader = createRLPHeader(expected.block);
+    //         await time.increase(time.duration.seconds(15));
+    //         await ethrelay.submitBlock(rlpHeader, {from: accountAddr, maxFeePerGas: next_gas_price, gasPrice: GAS_PRICE_IN_WEI});
+    //         const submitTime = await time.latest();
+    //         expected.lockedUntil = submitTime.add(LOCK_PERIOD);
+    //     });
+    // };
 
     const asyncForEach = async (array, callback) => {
         for (let index = 0; index < array.length; index++) {
