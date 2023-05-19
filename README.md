@@ -23,7 +23,9 @@ You need to have the following software installed:
 3. Run a local Ethereum blockchain (Ganache).
 4. Deploy contracts: `truffle migrate --reset`
 
-## Cost Analysis
+## Analysis and Experiments
+
+### Cost Analysis
 
 The project includes a test suite that also measure the gas consumption of every operation discussed in the paper. 
 
@@ -38,6 +40,34 @@ To execute the test about the StateRelay:
 To execute the test about the MerkleRelay:
 1. Run a local Ethereum blockchain (Ganache).
 2. Run `truffle test test/MerkleRelay.test.js`
+
+### Produced DID Document
+
+The PoC computes a DID Document in the following form:
+
+```json
+{
+    "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1",
+      ],
+      "id": "did:ether-did:<Ethereum-target-address>",
+      "verificationMethod": [{
+        "id": "did:ether-did:<Ethereum-target-address>",
+        "type": "EthereumAddress",
+        "controller": "did:ether-did:<Ethereum-target-address>",
+        "blockchainAccountId": "<Ethereum-target-address>",
+      }],
+      "alsoKnownAs: ["did:ether-did:<Ethereum-source-address>"],
+      "verificationRelationship": {
+        "authentication": [{
+            "id": "<Ethereum-target-address>", 
+            "type": "EthereumAddress",
+            "blockchainAccountId": "<Ethereum-source-address>"
+          }]
+      }
+} 
+```
 
 ## Contributing
 
